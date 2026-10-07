@@ -8,9 +8,16 @@ import os
 # slug -> (ficha relativa a la raíz del repo, modelo del proxy)
 REGISTRO = {
     "gerente-general": ("agentes/direccion/gerente-general.md", "empresa-razonamiento"),
+    "arquitecto": ("agentes/ingenieria/arquitecto.md", "empresa-razonamiento"),
     "constructor": ("agentes/ingenieria/constructor.md", "empresa-base"),
+    "desarrollador-mobile": ("agentes/ingenieria/desarrollador-mobile.md", "empresa-base"),
+    "ingeniero-datos": ("agentes/ingenieria/ingeniero-datos.md", "empresa-base"),
+    "ingeniero-ml": ("agentes/ingenieria/ingeniero-ml.md", "empresa-razonamiento"),
     "revisor": ("agentes/ingenieria/revisor.md", "empresa-razonamiento"),
     "control-de-calidad": ("agentes/ingenieria/control-de-calidad.md", "empresa-base"),
+    "disenador-ux-ui": ("agentes/ingenieria/disenador-ux-ui.md", "empresa-base"),
+    "ingeniero-seguridad": ("agentes/ingenieria/ingeniero-seguridad.md", "empresa-razonamiento"),
+    "sre": ("agentes/ingenieria/sre.md", "empresa-base"),
     "responsable-despliegues": ("agentes/ingenieria/responsable-despliegues.md", "empresa-base"),
     "prospector": ("agentes/ventas/prospector.md", "empresa-base"),
     "contacto-inicial": ("agentes/ventas/contacto-inicial.md", "empresa-base"),
@@ -40,7 +47,7 @@ def _leer(rel: str) -> str:
 
 
 def prompt_sistema(slug: str) -> str:
-    """Compone el prompt del sistema: ficha + habilidad del agente."""
+    """Compone el prompt del sistema: ficha + habilidad del agente + capacidades transversales."""
     if slug not in REGISTRO:
         raise ValueError(f"Agente desconocido: {slug}. Opciones: {', '.join(slugs())}")
     ficha_rel, _ = REGISTRO[slug]
@@ -49,15 +56,27 @@ def prompt_sistema(slug: str) -> str:
         skill = _leer(f"habilidades/{slug}/SKILL.md")
     except FileNotFoundError:
         skill = "(sin SKILL.md)"
-    return (
+    try:
+        transversal = _leer("habilidades/autocapacitacion/SKILL.md")
+    except FileNotFoundError:
+        transversal = ""
+    prompt = (
         "Sos un agente de la empresa. Esta es tu ficha de rol:\n\n"
         f"{ficha}\n\n"
         "Y esta es tu habilidad operativa (cómo ejecutar tu trabajo):\n\n"
         f"{skill}\n\n"
+    )
+    if transversal:
+        prompt += (
+            "Además tenés esta capacidad transversal (aplica siempre, en cualquier tarea):\n\n"
+            f"{transversal}\n\n"
+        )
+    prompt += (
         "Respondé en español rioplatense, directo y sin relleno. "
         "Si la tarea excede tus permisos o necesitás aprobación de Fabian, "
         "decilo explícitamente en vez de inventar."
     )
+    return prompt
 
 
 def modelo_para(slug: str) -> str:
