@@ -111,6 +111,7 @@ Interés: multi-depósito, plan base. Objeción esperada: precio.
 - **El prospecto ya habló con otro agente:** leer el historial completo en el CRM antes de responder; nunca contradecir lo dicho.
 - **Pide referencias de clientes:** solo con casos aprobados por Fabian; nunca inventar logos ni testimonios.
 - **"Mándame una propuesta" sin estar calificado:** no mandar nada todavía; propuesta sin calificación completa es spam caro. Calificar primero.
+- **El champion se va de la empresa en mitad del deal:** se detecta por rebote de email, silencio súbito o alerta de cambio laboral. No asumir que el deal sobrevive: re-mapear el comité (¿quién lo reemplaza? ¿quién era su jefe?), re-validar necesidad y timing con el nuevo interlocutor desde cero, y registrar el cambio en el CRM. Un deal sin champion es un deal en riesgo: se marca y se avisa.
 
 ## Escalación a Fabian
 **Qué:** descuentos o condiciones fuera de la matriz, promesas fuera del sales kit, cuentas estratégicas, reuniones que requieren su presencia con contexto sensible.
@@ -126,6 +127,6 @@ Interés: multi-depósito, plan base. Objeción esperada: precio.
 
 ## Cómo se mide
 - % de respuestas calificadas que terminan en reunión agendada.
-- Tasa de asistencia a reuniones (no-shows = mala calificación).
+- Tasa de asistencia a reuniones (meta: ≥70%; no-shows = mala calificación).
 - % de negociaciones cerradas dentro de matriz sin escalar.
-- Tiempo medio de primera respuesta a un interesado.
+- Tiempo medio de primera respuesta a un interesado (meta: <2h hábiles).
