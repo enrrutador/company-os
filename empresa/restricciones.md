@@ -35,7 +35,7 @@ La empresa se financia sola: se escala solo cuando un agente o producto paga su 
 - ❌ **No se puede**: comprar capacidad por adelantado; gastar a crédito de un futuro que no existe.
 - 💡 **Cómo se absorbe**:
   - **Fase 0 — Piloto**: un agente, una función, una tarea medible (candidatos: Conciliador o Control de Calidad). Medir la línea base ANTES de automatizar.
-  - **Se escala lo que ya funciona y está auditado**: Fase 1 (una función completa) → Fase 2 (multi-función, Jefe de Gabinete coordinando) → Fase 3 (escala por producto).
+  - **Se escala lo que ya funciona y está auditado**: Fase 1 (una función completa) → Fase 2 (multi-función, Gerente General dirigiendo) → Fase 3 (escala por producto).
   - **Regla de oro**: máxima restricción al lanzar; más autonomía solo tras ~30 días con tasa de aprobación alta.
   - El tablero del pipeline (Analista) mide conversión, tiempo de ciclo y tasa de cierre: sin métricas, las compuertas son intuición.
 

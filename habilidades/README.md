@@ -8,7 +8,7 @@ lo hace bien. Ambas se leen juntas.
 
 | Agente | Habilidad | Especialidad |
 |---|---|---|
-| Jefe de Gabinete | [Jefe de Gabinete](jefe-de-gabinete/SKILL.md) | Coordinación y descomposición de objetivos |
+| Gerente General | [Gerente General](gerente-general/SKILL.md) | Coordinación y descomposición de objetivos |
 | Constructor | [Constructor](constructor/SKILL.md) | Implementación desde specs |
 | Revisor | [Revisor](revisor/SKILL.md) | Revisión de código |
 | Control de Calidad | [Control de Calidad](control-de-calidad/SKILL.md) | Testeo y reporte de fallos |

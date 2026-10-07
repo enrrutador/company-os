@@ -1,10 +1,34 @@
 # Organigrama
 
-18 agentes en 7 áreas + Fabian, el único humano. Ningún agente tiene poder sobre otro: **planificador ≠ ejecutor ≠ validador ≠ logger**.
+18 agentes en 7 áreas + Fabian, el único humano.
+
+## Jerarquía
+
+```
+Fabian (único humano, dueño y director)
+  │
+  │  flujo por defecto de trabajo e información
+  ▼
+Gerente General (agente directivo)
+  │
+  ├── Ingeniería & Producto (4): Constructor, Revisor, Control de Calidad, Responsable de Despliegues
+  ├── Ventas (4): Prospector, Contacto Inicial, Calificador, Custodio del CRM
+  ├── Soporte (3): Soporte Nivel 1, Responsable de Activación, Escalamiento
+  ├── Marketing & Contenidos (2): Contenidos, Analista
+  ├── Finanzas & Admin (3): Facturador, Conciliador, Responsable de Informes
+  └── Operaciones & IT (1): Guardián
+```
+
+- **Flujo por defecto**: Fabian define objetivos → el Gerente General los descompone, delega a cada sector, supervisa y reporta. Toda tarea nace asignada por él; todo reporte sube por él.
+- **Acceso directo de Fabian**: Fabian puede hablar con cualquier agente cuando quiera — es la excepción, no la norma. El Gerente General lo registra para mantener el mapa de trabajo al día.
+- **Separación de funciones**: planificador ≠ ejecutor ≠ validador ≠ logger. Ningún agente ejecuta el trabajo de otro sector ni revoca veredictos ajenos.
+- **Excepciones diseñadas** (las únicas dos):
+  1. El **Gerente General** tiene autoridad de delegación y supervisión sobre los sectores: asigna tareas, exige avances y reprioriza dentro de los objetivos vigentes. No decide lo estratégico ni mueve dinero.
+  2. El **Guardián** tiene el interruptor de emergencia: frena agentes con gasto o comportamiento anormal según umbrales de Fabian, con alerta inmediata.
 
 ## Fabian (único humano, para siempre)
 
-- **Director de la empresa**: define objetivos, que el Jefe de Gabinete descompone y asigna.
+- **Director de la empresa**: define objetivos, que el Gerente General descompone y asigna.
 - **Aprueba lo irreversible**: humano *in-the-loop* para dinero, clientes, accesos y despliegues (aprobaciones por lote desde el celular).
 - **Dueño de todos los agentes**: cada agente tiene identidad propia y permisos mínimos; Fabian es el dueño nombrado de cada uno.
 - **Destino final de toda escalación**: soporte, ventas y cualquier caso fuera de guion terminan en él.
@@ -13,7 +37,7 @@
 
 | Área | Agente | Rol | Ficha |
 |---|---|---|---|
-| **Coordinación** | Jefe de Gabinete | Recibe objetivos de Fabian, los descompone en tareas, las asigna a cada función y reporta avance. El único que habla con todos. | [jefe-de-gabinete.md](../agentes/coordinacion/jefe-de-gabinete.md) |
+| **Dirección** | Gerente General | El directivo después de Fabian: delega tareas a cada sector, supervisa la ejecución y reporta avance. El único que habla con todos. | [gerente-general.md](../agentes/direccion/gerente-general.md) |
 | **Ingeniería & Producto** (4) | Constructor | Implementa funcionalidades y correcciones. Escribe código, no despliega solo. | [constructor.md](../agentes/ingenieria/constructor.md) |
 | | Revisor | Revisa el código del Constructor: segundo par de ojos. | [revisor.md](../agentes/ingenieria/revisor.md) |
 | | Control de Calidad | Corre pruebas, reporta fallos. Autónomo. | [control-de-calidad.md](../agentes/ingenieria/control-de-calidad.md) |

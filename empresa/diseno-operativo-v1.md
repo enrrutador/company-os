@@ -18,8 +18,8 @@ Una empresa multi-producto donde cada función (ingeniería, ventas, soporte, fi
 
 ## Organigrama de agentes (plantilla v1)
 
-### Coordinación
-- **Jefe de Gabinete (agente)**: recibe objetivos de Fabian, los descompone en tareas, las asigna a cada función y reporta avance. Es el único que habla con todos.
+### Dirección
+- **Gerente General (agente)**: el directivo después de Fabian. Recibe sus objetivos, los descompone en tareas, los delega a cada sector, supervisa la ejecución y reporta avance. Es el único que habla con todos.
 - **Fabian (único humano, para siempre)**: define objetivos, aprueba lo irreversible, es dueño de todos los agentes y destino final de toda escalación. No hay nadie más: ni socios, ni empleados, ni contratistas.
 
 ### Operar con un solo humano
@@ -91,7 +91,7 @@ Regla de oro reportada: **máxima restricción al lanzar; más autonomía solo t
 
 - **Fase 0 — Piloto (semanas 1–4)**: un agente, una función, una tarea medible. Medir la *línea base* ANTES de automatizar. Candidatos: **Conciliador** (finanzas) o **Control de Calidad** (ingeniería) — tareas acotadas y medibles.
 - **Fase 1 — Primera función completa (meses 2–3)**: el equipo de una función (p. ej. soporte L1) con gobernanza mínima.
-- **Fase 2 — Multi-función (meses 4–6)**: un equipo por función, Jefe de Gabinete coordinando.
+- **Fase 2 — Multi-función (meses 4–6)**: un equipo por función, Gerente General coordinando.
 - **Fase 3 — Escala por producto**: cada producto nuevo nace "listo para agentes" sobre la misma infra compartida (MCP + gateway + observabilidad). **Esta es la ventaja estructural** frente a una empresa tradicional.
 
 ## Pipeline de producto (compuertas de etapa) — v3
@@ -100,7 +100,7 @@ El flujo no es una línea, es un ciclo con compuertas. Fabian abre y cierra cada
 
 **0. Búsqueda (continuo)** — Analista escanea mercado, competencia y pedidos de clientes en forma permanente y mantiene una **pila de tesis** priorizada. El pipeline nunca depende de la inspiración del momento.
 
-1. **Tesis** (Fabian + Jefe de Gabinete) → artefacto: hipótesis escrita + criterios de cierre + revisión de WIP. **El Jefe de Gabinete somete la hipótesis al equipo rojo** antes de gastar un ciclo de validación.
+1. **Tesis** (Fabian + Gerente General) → artefacto: hipótesis escrita + criterios de cierre + revisión de WIP. **El Gerente General somete la hipótesis al equipo rojo** antes de gastar un ciclo de validación.
 2. **Validación** (investigación/Analista) → artefacto: evidencia, **precios validados con método** (prueba en landing/preventa a precio real, no "¿pagarías X?"), mapa de competencia, **lista de lanzamiento** (entrevistados → CRM como prospectos interesados). Entrevistas asincrónicas por agentes (formularios, landing, chat); Fabian solo cierra 2–3 clave. La preventa exige infra de cobro lista y promesa explícita (reembolsable). *Compuerta 1 — Fabian: se construye o se mata.*
 3. **Construcción** (Constructor, Revisor, Control de Calidad) → artefacto: **especificación escrita** desde la evidencia + PMV + kit de ventas (resumen de una página, demo, precios) + legales base (términos, privacidad) + lista de verificación: dependencias evaluadas a costo $0, configuración de cobro por producto, nombre/marca/dominio.
 4. **Uso interno** → criterios de salida explícitos: ¿lo usaríamos nosotros? ¿pasa el umbral? *Compuerta 2.*
