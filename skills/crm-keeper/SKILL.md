@@ -23,16 +23,28 @@ Sos la memoria comercial de la empresa. Tu estándar: si no está en el CRM, no 
 **Cuándo:** Outreach o Qualifier reportan un evento.
 **Pasos:**
 1. Actualizá el estado según el flujo válido (ver esquema): `nuevo → contactado → respondido → calificado → reunion_agendada → propuesta → ganado / perdido`. Ramas: `no_interesado`, `opt_out`, `nutrir` (con fecha).
-2. Cada cambio lleva: fecha, responsable del dato (qué agente lo reportó) y nota breve si aplica.
-3. Latencia objetivo: el evento queda registrado el mismo día.
-**Criterio de calidad:** ningún contacto con estado desactualizado más de 24h.
+2. Regla de oro de las etapas: cada etapa se define por **lo que hizo el comprador**, no por lo que hizo el vendedor. "Propuesta" = propuesta enviada Y el comprador respondió; no "creo que están cerca". Si un deal puede estar en una etapa sin que el comprador haya hecho nada para merecerla, la etapa mide optimismo y todos los números que salen de ahí son ficción.
+3. Campos obligatorios por transición (sin estos no se avanza de etapa): monto, fecha estimada de cierre, próximo paso con fecha, decisor identificado. El dato que se completa después se inventa: se exige al entrar, no al salir.
+4. Cada cambio lleva: fecha, responsable del dato (qué agente lo reportó) y nota breve si aplica.
+5. Latencia objetivo: el evento queda registrado el mismo día.
+**Criterio de calidad:** ningún contacto con estado desactualizado más de 24h; 0 deals en etapa sin criterio de entrada cumplido.
 
 ### 3. Detección y fusión de duplicados
 **Cuándo:** semanal, y ante cada carga.
 **Pasos:**
-1. Detectá por email exacto, o nombre + empresa, o LinkedIn URL.
-2. Al fusionar: se conserva UN registro con el historial completo de ambos (actividades, notas, estados). Nada se pierde.
-3. El registro descartado se archiva con motivo, no se elimina (audit trail).
+1. Detectá con matching ponderado (no solo match exacto, que deja pasar la mayoría de los duplicados reales):
+
+   | Campo | Peso | Tipo de match |
+   |---|---|---|
+   | Email | 0.9 | Exacto: un match alcanza para marcar |
+   | LinkedIn URL | 0.85 | Exacto: identificador único global |
+   | Teléfono | 0.8 | Exacto normalizado (mismo formato antes de comparar) |
+   | Nombre + empresa | 0.7 | Fuzzy combinado: ninguno solo alcanza |
+   | Solo nombre | 0.3 | Fuzzy: demasiados falsos positivos solo |
+2. Al fusionar: el registro ganador es el que tiene **más historial de actividad**. En conflictos campo por campo gana el **valor más reciente**, salvo campos donde recencia ≠ exactitud (ej.: un teléfono bien cargado hace 3 años vs. uno mal cargado ayer: gana el correcto, no el nuevo).
+3. Se conserva UN registro con el historial completo de ambos (actividades, notas, estados, deals asociados). Nada se pierde.
+4. El registro descartado se archiva con motivo, no se elimina (audit trail).
+5. Priorizá por segmento: primero pipeline activo, después clientes actuales, después leads viejos. Lo de más valor se limpia primero.
 **Criterio de calidad:** 0 pares de duplicados conviviendo al cierre de la semana.
 
 ### 4. Reporte de pipeline
@@ -40,8 +52,14 @@ Sos la memoria comercial de la empresa. Tu estándar: si no está en el CRM, no 
 **Pasos:**
 1. Volumen por etapa, antigüedad promedio por etapa, conversión entre etapas.
 2. Alertar: deals estancados (más de 21 días sin movimiento), etapas con caída de conversión.
-3. Solo lectura agregada; el reporte no expone datos personales innecesarios.
-**Criterio de calidad:** números trazables a registros; si hay inconsistencias abiertas del Reconciler que tocan el período, se declaran.
+3. **Barrida de zombies:** todo deal sin actividad del lado del comprador por más de 2x el cycle time mediano se cierra como perdido con motivo. Un pipeline lleno de zombies infla la cobertura y esconde el bache real hasta fin de mes.
+4. Matemática del pipeline (definiciones fijas, siempre igual):
+   - **Conversión por etapa** = deals que avanzan / deals que entraron (por cohorte de mes de entrada, no foto instantánea).
+   - **Win rate** = ganados / (ganados + perdidos), solo deals calificados.
+   - **Velocidad** = (nº deals calificados × ticket promedio × win rate) / días de ciclo.
+   - **Cobertura** = pipeline abierto / objetivo del período (sano: 3-4x).
+5. Solo lectura agregada; el reporte no expone datos personales innecesarios.
+**Criterio de calidad:** números trazables a registros; si hay inconsistencias abiertas del Reconciler que tocan el período, se declaran. Todo `perdido` lleva motivo de pérdida registrado.
 
 ## Esquema de datos
 **Contacto:**
@@ -52,8 +70,10 @@ Sos la memoria comercial de la empresa. Tu estándar: si no está en el CRM, no 
 ## Checklists
 - [ ] Campos requeridos completos en cada registro
 - [ ] Fuente y fecha registradas
-- [ ] Duplicados chequeados antes de crear
+- [ ] Duplicados chequeados antes de crear (matching ponderado, no solo exacto)
 - [ ] Estado actualizado el mismo día del evento
+- [ ] Etapa con criterio de entrada del comprador cumplido (no por optimismo)
+- [ ] Campos obligatorios exigidos al avanzar de etapa
 - [ ] Tenancy: datos de un cliente/producto sin mezclarse
 - [ ] Escrituras en log append-only (qué, cuándo, con qué fuente)
 - [ ] Sin borrados definitivos: archivar con motivo

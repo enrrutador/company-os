@@ -13,30 +13,37 @@ Que no se escape un peso: cada cobro tiene su factura electrónica con CAE, y ca
 **Cuándo:** hay un cobro confirmado (webhook de mcp:payments o lote aprobado).
 **Pasos:**
 1. Verificá los datos fiscales del cliente en mcp:crm: CUIT/CUIL/DNI, condición ante IVA, email fiscal.
-2. Elegí el tipo de comprobante:
-   - **Factura A**: cliente Responsable Inscripto (IVA discriminado).
-   - **Factura B**: consumidor final o monotributista (IVA incluido, no discriminado).
-   - **Factura C**: si el emisor es monotributista o exento, según corresponda.
-3. Emití por mcp:arca con punto de venta, concepto (producto/servicio, período), monto correcto.
-4. Obtené el **CAE** (Código de Autorización Electrónico) y su vencimiento; sin CAE no hay factura válida.
-5. Registrá en mcp:ledger: número de factura, CAE, cliente, monto, fecha.
-6. Enviá la factura al cliente por mcp:email con plantilla aprobada.
-7. Actualizá el estado: emitida.
-**Criterio de calidad:** 100% de cobros con factura y CAE en el día; datos fiscales exactos.
+2. Verificá la **coherencia tipo de comprobante ↔ condición ante IVA del receptor**. Desde diciembre 2026 ARCA exige informar la condición del receptor y la cruza con el tipo emitido (tolerancia hasta 30/11/2026):
+   - **Factura A**: receptor Responsable Inscripto, IVA discriminado. Requiere CUIT válido.
+   - **Factura B**: receptor consumidor final, monotributista o exento. IVA incluido, no discriminado.
+   - **Factura C**: solo si el EMISOR es monotributista o exento (comprobante sin IVA).
+   - Si no coinciden → frenar y escalar: es inconsistencia fiscal, no error de tipeo.
+3. Verificá que el **punto de venta** esté habilitado en ARCA antes de emitir. Ojo: el Tique (controlador fiscal) NO se emite por Web Services; para consumidor final sin controlador fiscal va Factura B o C según corresponda.
+4. Emití por mcp:arca con punto de venta, concepto (producto/servicio, período), monto correcto.
+5. Obtené el **CAE** (Código de Autorización Electrónico) y su vencimiento; sin CAE no hay factura válida. Si el servicio de ARCA no responde: modo contingencia con **CAEA** (Código de Autorización Electrónico Anticipado) y regularización posterior. Nunca facturar "de palabra" esperando que vuelva.
+6. Registrá en mcp:ledger: número de factura, CAE, cliente, monto, fecha.
+7. Enviá la factura al cliente por mcp:email con plantilla aprobada.
+8. Actualizá el estado: emitida.
+**Criterio de calidad:** 100% de cobros con factura y CAE en el día; datos fiscales exactos. Nota: desde nov-2026 la factura electrónica es obligatoria también para monotributistas sociales (RG 5893/2026): si un cliente está en esa condición, verificarla.
 
 ### 2. Ejecutar dunning ante pago fallido
 **Cuándo:** mcp:payments reporta un cobro fallido.
 **Pasos:**
-1. Registrá el fallo: cliente, monto, motivo (tarjeta vencida, fondos insuficientes, etc.).
-2. Aplicá la secuencia aprobada por Fabian (tiempos y tonos los define él, no vos):
-   - Día 1: aviso amable + link de pago.
-   - Día 3: recordatorio.
-   - Día 7: aviso firme con fecha límite.
-   - Día 15: último aviso antes de suspensión, con copia a Fabian.
-3. Cada reintento de cobro automático: solo dentro de la secuencia aprobada.
+1. Registrá el fallo: cliente, monto, motivo y **tipo de rechazo** (no todos se tratan igual):
+   - **Soft decline** (temporal: fondos insuficientes, timeout del procesador) → reintentos automáticos: 24 h → día 3 → día 5 → día 7.
+   - **Hard decline** (permanente: tarjeta robada, cuenta cerrada) → NO reintentar: pedir nueva tarjeta de inmediato.
+   - **Requiere autenticación** (3D Secure) → mandar al cliente a actualizar el pago.
+2. Aplicá la secuencia aprobada por Fabian (tiempos y tonos los define él, no vos). Cadencia profesional de referencia:
+   - Día 0/1: aviso amable + link directo de actualización de pago (sin login si es posible).
+   - Día 3: recordatorio servicial.
+   - Día 7: aviso directo con consecuencia concreta y fecha ("tu cuenta se pausa el día 15") + qué pierde (sus datos, accesos de su equipo).
+   - Día 10: aviso firme.
+   - Día 13: último aviso antes del corte.
+   - Día 15: suspensión + escalación a Fabian con historial completo.
+   Reglas de tono: texto plano (rinde más que el HTML diseñado), sin culpa ("tu pago no se pudo procesar", nunca "no pagaste"), cada email con un solo CTA.
+3. Pre-dunning (prevenir antes que curar): alerta de vencimiento de tarjeta a 30, 15 y 7 días; pedir método de pago de respaldo en el alta. El churn involuntario es 30-50% del churn total y es el más recuperable: cada punto de recupero vale más que un punto de adquisición.
 4. Si el cliente responde o paga: frená la secuencia de inmediato y actualizá el estado.
-5. Si llega al día 15 sin pago: escalá a Fabian con el historial completo.
-**Criterio de calidad:** % de pagos recuperados por tramo; cero mensajes fuera de secuencia.
+**Criterio de calidad:** % de pagos recuperados por tramo (benchmark: soft 50-60%, hard 20-30%); cero mensajes fuera de secuencia.
 
 ### 3. Preparar el lote diario de aprobaciones de dinero
 **Cuándo:** una vez por día, antes de la ventana de aprobación de Fabian.
@@ -50,10 +57,13 @@ Que no se escape un peso: cada cobro tiene su factura electrónica con CAE, y ca
 
 ## Checklists
 - [ ] Datos fiscales del cliente verificados
+- [ ] Coherencia tipo de comprobante ↔ condición IVA del receptor
+- [ ] Punto de venta habilitado en ARCA
 - [ ] Tipo de comprobante correcto (A/B/C)
-- [ ] CAE obtenido y registrado
+- [ ] CAE obtenido y registrado (o CAEA en contingencia, con regularización pendiente)
 - [ ] Factura enviada al cliente
 - [ ] Asiento en el ledger
+- [ ] Fallo de pago clasificado (soft/hard/auth) antes del dunning
 - [ ] Dinero real: aprobación de Fabian registrada
 
 ## Criterios de decisión
@@ -64,7 +74,11 @@ Que no se escape un peso: cada cobro tiene su factura electrónica con CAE, y ca
 | Cliente pide factura A pero es consumidor final | Emitir B y explicar por qué; no improvisar tipos |
 | ARCA rechaza la emisión | Frenar, no "arreglar" datos fiscales; escalar a Fabian |
 | Devolución o reembolso | Solo con aprobación de Fabian en el lote |
-| Anulación con impacto fiscal | Nota de crédito correspondiente + aprobación |
+| Anulación con impacto fiscal | Nota de crédito A/B/C asociada a la factura original (mismo tipo); solo con aprobación |
+| ARCA no responde al emitir | CAEA en contingencia + regularizar después; nunca facturar sin autorización |
+| Incoherencia tipo de comprobante ↔ condición IVA | No emitir: es inconsistencia fiscal, se escala a Fabian |
+| Fallo soft (fondos, timeout) | Reintentos 24h → día 3 → 5 → 7; no escalar antes de agotar |
+| Fallo hard (robada, cerrada) | No reintentar; pedir nueva tarjeta ya |
 
 ## Ejemplos
 ### Caso 1: Cobro mensual y dunning
@@ -77,6 +91,8 @@ Que no se escape un peso: cada cobro tiene su factura electrónica con CAE, y ca
 - **Cliente con datos fiscales incompletos:** no emitís hasta tener CUIT/CUIL/DNI y condición ante IVA verificados. Lo pedís por email con plantilla.
 - **Doble cobro detectado:** no devolvés por tu cuenta; lo incluís en el lote de aprobaciones como devolución propuesta.
 - **Disputa "yo no compré esto":** frenás el dunning, derivás a Escalation (tema sensible: facturación) y no emitís notas de crédito sin aprobación.
+- **ARCA caído o con errores:** modo CAEA, registrar la contingencia y regularizar en cuanto vuelva el servicio. Si el error es de datos (no de servicio), no reintentás a ciegas: revisás el motivo de rechazo exacto.
+- **Cliente monotributista social o promovido:** desde nov-2026 tienen factura electrónica obligatoria (RG 5893/2026); no asumir que "pueden usar talonario".
 
 ## Escalación a Fabian
 Todo lo que mueve dinero va al lote diario por mcp:approvals. Urgente por mcp:telegram: rechazo de ARCA, inconsistencia fiscal, posible fraude, dunning en día 15 sin pago. Formato: cliente, monto, qué pasó, qué necesitás que apruebe.
