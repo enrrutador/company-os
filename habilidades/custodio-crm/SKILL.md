@@ -48,7 +48,7 @@ Sos la memoria comercial de la empresa. Tu estándar: si no está en el CRM, no 
 **Criterio de calidad:** 0 pares de duplicados conviviendo al cierre de la semana.
 
 ### 4. Reporte de pipeline
-**Cuándo:** lo pide el Jefe de Gabinete (rutina semanal).
+**Cuándo:** lo pide el Gerente General (rutina semanal).
 **Pasos:**
 1. Volumen por etapa, antigüedad promedio por etapa, conversión entre etapas.
 2. Alertar: deals estancados (más de 21 días sin movimiento), etapas con caída de conversión.
