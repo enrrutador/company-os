@@ -1,6 +1,6 @@
 # Organigrama
 
-18 agentes en 7 áreas + Fabian, el único humano.
+25 agentes en 7 áreas + Fabian, el único humano.
 
 ## Jerarquía
 
@@ -11,7 +11,7 @@ Fabian (único humano, dueño y director)
   ▼
 Gerente General (agente directivo)
   │
-  ├── Ingeniería & Producto (4): Constructor, Revisor, Control de Calidad, Responsable de Despliegues
+  ├── Ingeniería & Producto (11): Arquitecto, Constructor (full-stack), Desarrollador Mobile, Ingeniero de Datos, Ingeniero de ML, Revisor, Control de Calidad, Diseñador UX/UI, Ingeniero de Seguridad, SRE, Responsable de Despliegues
   ├── Ventas (4): Prospector, Contacto Inicial, Calificador, Custodio del CRM
   ├── Soporte (3): Soporte Nivel 1, Responsable de Activación, Escalamiento
   ├── Marketing & Contenidos (2): Contenidos, Analista
@@ -38,9 +38,16 @@ Gerente General (agente directivo)
 | Área | Agente | Rol | Ficha |
 |---|---|---|---|
 | **Dirección** | Gerente General | El directivo después de Fabian: delega tareas a cada sector, supervisa la ejecución y reporta avance. El único que habla con todos. | [gerente-general.md](../agentes/direccion/gerente-general.md) |
-| **Ingeniería & Producto** (4) | Constructor | Implementa funcionalidades y correcciones. Escribe código, no despliega solo. | [constructor.md](../agentes/ingenieria/constructor.md) |
+| **Ingeniería & Producto** (11) | Arquitecto | Diseña la arquitectura y escribe ADRs antes de construir. Planificador técnico. | [arquitecto.md](../agentes/ingenieria/arquitecto.md) |
+| | Constructor | Full-stack (backend + frontend web). Escribe código y pruebas, no despliega solo. | [constructor.md](../agentes/ingenieria/constructor.md) |
+| | Desarrollador Mobile | Apps iOS/Android multiplataforma. Publica en tiendas solo con aprobación. | [desarrollador-mobile.md](../agentes/ingenieria/desarrollador-mobile.md) |
+| | Ingeniero de Datos | Pipelines, calidad de datos y almacenes. Sin datos confiables no hay métricas ni ML. | [ingeniero-datos.md](../agentes/ingenieria/ingeniero-datos.md) |
+| | Ingeniero de ML | Entrena, evalúa y opera modelos. Ningún modelo sale sin evaluación. | [ingeniero-ml.md](../agentes/ingenieria/ingeniero-ml.md) |
 | | Revisor | Revisa el código del Constructor: segundo par de ojos. | [revisor.md](../agentes/ingenieria/revisor.md) |
 | | Control de Calidad | Corre pruebas, reporta fallos. Autónomo. | [control-de-calidad.md](../agentes/ingenieria/control-de-calidad.md) |
+| | Diseñador UX/UI | Flujos, interfaces y sistema de diseño. El diseño entra antes del código. | [disenador-ux-ui.md](../agentes/ingenieria/disenador-ux-ui.md) |
+| | Ingeniero de Seguridad | Threat modeling y vulnerabilidades. Puede frenar un despliegue por riesgo crítico. | [ingeniero-seguridad.md](../agentes/ingenieria/ingeniero-seguridad.md) |
+| | SRE | SLOs, observabilidad e incidentes. La confiabilidad se diseña. | [sre.md](../agentes/ingenieria/sre.md) |
 | | Responsable de Despliegues | Despliega solo con aprobación humana (*in-the-loop*). | [responsable-despliegues.md](../agentes/ingenieria/responsable-despliegues.md) |
 | **Ventas** (4) | Prospector | Investiga cuentas, arma listas. Autónomo. | [prospector.md](../agentes/ventas/prospector.md) |
 | | Contacto Inicial | Redacta y envía mensajes. *On-the-loop* (revisión antes de enviar en volumen). | [contacto-inicial.md](../agentes/ventas/contacto-inicial.md) |
@@ -56,7 +63,7 @@ Gerente General (agente directivo)
 | | Responsable de Informes | P&L mensual y flujo de caja. Autónomo. | [responsable-informes.md](../agentes/finanzas/responsable-informes.md) |
 | **Operaciones & IT** (1) | Guardián | Monitorea infra y costo de tokens, alerta anomalías y frena agentes con gasto anormal (interruptor de emergencia). Autónomo, límites estrictos (solo lectura + freno de emergencia). | [guardian.md](../agentes/operaciones/guardian.md) |
 
-**Total: 18 agentes** + Fabian (único humano).
+**Total: 25 agentes** + Fabian (único humano).
 
 ## Notas de gobierno
 

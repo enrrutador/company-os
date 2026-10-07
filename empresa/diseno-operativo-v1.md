@@ -59,7 +59,7 @@ Una empresa multi-producto donde cada función (ingeniería, ventas, soporte, fi
 ### Operaciones & IT
 - **Guardián**: monitorea infra y costo de tokens, alerta anomalías y puede frenar agentes con gasto anormal (interruptor de emergencia). Autónomo, con límites estrictos (solo lectura + freno de emergencia).
 
-**Total v1: 18 agentes** (+ Fabian como humano). Ninguno con poder sobre otro: planificador ≠ ejecutor ≠ validador ≠ logger.
+**Total v1: 18 agentes** (+ Fabian como humano). Ampliación 2026-10-07: 25 agentes (Ingeniería & Producto pasa de 4 a 11 con Arquitecto, Desarrollador Mobile, Ingeniero de Datos, Ingeniero de ML, Diseñador UX/UI, Ingeniero de Seguridad y SRE). Excepciones diseñadas al "ningún agente tiene poder sobre otro": autoridad de delegación del Gerente General, freno de emergencia del Guardián y freno por riesgo crítico del Ingeniero de Seguridad.
 
 ## Infraestructura (pila sugerida, bajo capital)
 

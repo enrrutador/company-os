@@ -21,7 +21,7 @@ El modelo es el de Meta: **una empresa, muchos productos; se crece construyendo 
 
 La capa portafolio disciplina este modelo: los productos compiten entre sí por capacidad de agentes y por atención de Fabian; lo que no tracciona se mata o se pausa (con proceso de discontinuación para productos con clientes: comunicación, migración, reembolsos).
 
-## Por qué un plantel de agentes: 1 humano + 18 agentes
+## Por qué un plantel de agentes: 1 humano + 25 agentes
 
 Fabian es la única persona —para siempre— y [un solo humano tiene límites](restricciones.md). La alternativa no es contratar gente, sino operar con agentes:
 
