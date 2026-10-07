@@ -1,23 +1,23 @@
-# Infraestructura — stack a costo $0
+# Infraestructura — pila a costo $0
 
 > Principio: **pagamos con tiempo de ingeniería, no con suscripciones.** Cada servicio pago que se evita es complejidad que asumimos a cambio de independencia y costo cero.
 
-## El stack
+## La pila
 
 | Capa | Elección | Por qué |
 |---|---|---|
-| Modelos | Open-source locales (Ollama/vLLM: Qwen, Llama) + free tiers | $0. Detalle en [modelos.md](modelos.md) |
-| Orquestación | LangGraph (Python) | OSS; auditable, checkpoints, human-in-the-loop nativo |
+| Modelos | De código abierto locales (Ollama/vLLM: Qwen, Llama) + planes gratuitos | $0. Detalle en [modelos.md](modelos.md) |
+| Orquestación | LangGraph (Python) | Código abierto; auditable, puntos de control, human-in-the-loop nativo |
 | Integraciones | MCP | Estándar abierto; es además nuestra tesis (empresa interoperable). Detalle en [mcp.md](mcp.md) |
-| Gateway y presupuestos | LiteLLM proxy (self-hosted) | Techos por request/sesión/key, circuit breakers; la política de gasto vive acá, no en el código del agente |
-| Observabilidad | Langfuse (self-hosted) | OSS; gratis total si se auto-hospeda |
-| Aprobaciones | Bot propio (Telegram/email) | Aprobar/rechazar desde el celular lo irreversible, sin costo |
+| Gateway y presupuestos | LiteLLM proxy (autohospedado) | Techos por solicitud/sesión/clave, cortacircuitos; la política de gasto vive acá, no en el código del agente |
+| Observabilidad | Langfuse (autohospedado) | Código abierto; gratis total si se auto-hospeda |
+| Aprobaciones | Bot propio (Telegram/correo) | Aprobar/rechazar desde el celular lo irreversible, sin costo |
 | Identidad | 1 identidad no-humana por agente | Permisos mínimos, tokens de corta vida, dueño nombrado (Fabian) |
-| Hosting | Hardware propio o free tier cloud | $0; escalar solo cuando un agente pague su propia infra con el valor que genera |
+| Hosting | Hardware propio o nube con plan gratuito | $0; escalar solo cuando un agente pague su propia infra con el valor que genera |
 
 ## Costo total: $0
 
-Todo el stack es open-source y auto-hospedado. El único "costo" es tiempo de ingeniería y el hardware que Fabian ya tenga. Guía paso a paso para levantar todo: [setup.md](setup.md).
+Toda la pila es de código abierto y autohospedada. El único "costo" es tiempo de ingeniería y el hardware que Fabian ya tenga. Guía paso a paso para levantar todo: [setup.md](setup.md).
 
 ## Regla de oro sobre pagos
 
@@ -25,6 +25,6 @@ Todo el stack es open-source y auto-hospedado. El único "costo" es tiempo de in
 
 ## Relación con el resto del repo
 
-- La infraestructura es **compartida por todos los productos**: cada producto nuevo nace "agent-ready" sobre MCP + gateway + observabilidad. Esa es la ventaja estructural frente a una empresa tradicional.
+- La infraestructura es **compartida por todos los productos**: cada producto nuevo nace "listo para agentes" sobre MCP + gateway + observabilidad. Esa es la ventaja estructural frente a una empresa tradicional.
 - El pipeline de producto asume esta infra disponible (ver `../pipeline/`).
 - Las fichas de producto viven en `../productos/`.

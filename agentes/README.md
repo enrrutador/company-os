@@ -21,7 +21,7 @@ La autonomía se gradúa **por riesgo**, no por capacidad. Del diseño operativo
 
 - **Autónomo** — acciones reversibles: leer, redactar borradores, correr tests, actualizar datos internos. El agente actúa solo y deja log de lo que hizo.
 - **On-the-loop** — riesgo medio: el agente actúa y Fabian revisa después. Aplica a lo que sale hacia afuera pero se puede corregir (emails, movimientos en el CRM). La revisión post-acción permite detectar y corregir a tiempo.
-- **In-the-loop** — acciones irreversibles o de alto impacto: dinero, clientes, accesos, deploys. Nada se ejecuta sin la aprobación previa de Fabian. Lo irreversible se acumula en una cola y Fabian lo aprueba por lote desde el celular en ventanas diarias; si no está disponible, los agentes siguen con lo autónomo y encolan lo irreversible. Nada irreversible se ejecuta sin él.
+- **In-the-loop** — acciones irreversibles o de alto impacto: dinero, clientes, accesos, despliegues. Nada se ejecuta sin la aprobación previa de Fabian. Lo irreversible se acumula en una cola y Fabian lo aprueba por lote desde el celular en ventanas diarias; si no está disponible, los agentes siguen con lo autónomo y encolan lo irreversible. Nada irreversible se ejecuta sin él.
 
 Regla de oro: máxima restricción al lanzar; más autonomía solo tras ~30 días con tasa de aprobación alta.
 
@@ -33,20 +33,20 @@ Ningún agente tiene poder sobre otro ni puede autovalidarse:
 - El que la ejecuta no es el que la **valida**.
 - Un cuarto rol **registra** (logger): todo queda en un log append-only — qué se hizo, con qué datos, quién lo aprobó. Sin log, no existe.
 
-## Skills: el cómo profesional
+## Habilidades: el cómo profesional
 
-Cada agente tiene además su **skill** en [`../skills/`](../skills/): procedimientos
-paso a paso, checklists, criterios de decisión, ejemplos y casos borde. La ficha
+Cada agente tiene además su **skill** en [`../habilidades/`](../habilidades/): procedimientos
+paso a paso, listas de verificación, criterios de decisión, ejemplos y casos borde. La ficha
 dice *qué* hace el agente; la skill dice *cómo* lo hace bien.
 
 ## Las 7 áreas
 
-1. [Coordinación](./coordinacion/) — Chief of Staff: recibe objetivos de Fabian, los descompone, asigna tareas y reporta avance.
-2. [Ingeniería & Producto](./ingenieria/) — Builder, Reviewer, QA, Deployer: construyen y llevan a producción.
-3. [Ventas](./ventas/) — Prospector, Outreach, Qualifier, CRM Keeper: investigan, contactan, califican y mantienen el CRM.
-4. [Soporte](./soporte/) — L1 Support, Onboarder, Escalation: resuelven, activan clientes y derivan a Fabian lo sensible.
-5. [Marketing & Contenidos](./marketing/) — Content, Analyst: redactan y miden qué funciona.
-6. [Finanzas & Admin](./finanzas/) — Biller, Reconciler, Reporter: facturan, concilian y reportan el P&L.
-7. [Operaciones & IT](./operaciones/) — Guardian: monitorea infra y costo, alerta anomalías y puede frenar agentes (kill switch).
+1. [Coordinación](./coordinacion/) — Jefe de Gabinete: recibe objetivos de Fabian, los descompone, asigna tareas y reporta avance.
+2. [Ingeniería & Producto](./ingenieria/) — Constructor, Revisor, Control de Calidad, Responsable de Despliegues: construyen y llevan a producción.
+3. [Ventas](./ventas/) — Prospector, Contacto Inicial, Calificador, Custodio del CRM: investigan, contactan, califican y mantienen el CRM.
+4. [Soporte](./soporte/) — Soporte Nivel 1, Responsable de Activación, Escalamiento: resuelven, activan clientes y derivan a Fabian lo sensible.
+5. [Marketing & Contenidos](./marketing/) — Contenidos, Analista: redactan y miden qué funciona.
+6. [Finanzas & Admin](./finanzas/) — Facturador, Conciliador, Responsable de Informes: facturan, concilian y reportan el P&L.
+7. [Operaciones & IT](./operaciones/) — Guardián: monitorea infra y costo, alerta anomalías y puede frenar agentes (interruptor de emergencia).
 
 Fabian es el único humano, para siempre: define objetivos, aprueba lo irreversible, es dueño de todos los agentes y destino final de toda escalación.
