@@ -9,7 +9,7 @@ Esta carpeta se llena sola a medida que el pipeline produce: cada producto que s
 ## Cómo nacería el primer producto
 
 1. El Analista mantiene la pila de tesis (búsqueda continua).
-2. Fabian + Jefe de Gabinete eligen una tesis y la someten al equipo rojo.
+2. Fabian + Gerente General eligen una tesis y la someten al equipo rojo.
 3. Se valida con evidencia real (precios testeados a precio real, no encuestas de intención).
 4. *Compuerta 1 — Fabian: se construye o se mata.*
 5. Recién entonces se crea `productos/<slug>.md` con la estructura de abajo, en estado `en-construccion`.

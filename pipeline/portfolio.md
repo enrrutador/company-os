@@ -6,17 +6,17 @@ El pipeline crea productos; esta capa decide cuáles viven, cuáles compiten y c
 
 Los productos no existen en el vacío: compiten entre sí por dos recursos escasos.
 
-1. **Capacidad de agentes.** Los equipos (Constructor, Revisor, Control de Calidad, comercial, soporte) son compartidos. El Jefe de Gabinete asigna capacidad según prioridad del portafolio, respetando el WIP máximo por etapa (ver [reglas.md](reglas.md)). Un producto en Construcción ocupa el lugar de Construcción: los demás esperan o mueren.
+1. **Capacidad de agentes.** Los equipos (Constructor, Revisor, Control de Calidad, comercial, soporte) son compartidos. El Gerente General asigna capacidad según prioridad del portafolio, respetando el WIP máximo por etapa (ver [reglas.md](reglas.md)). Un producto en Construcción ocupa el lugar de Construcción: los demás esperan o mueren.
 2. **Atención de Fabian.** Es el WIP maestro: compuertas, equipos rojos, entrevistas clave y escalaciones. El presupuesto semanal se reparte entre productos; el que no entra en el presupuesto, se pausa.
 
-La priorización la propone el Jefe de Gabinete con datos del tablero y la decide Fabian en la revisión periódica de portafolio.
+La priorización la propone el Gerente General con datos del tablero y la decide Fabian en la revisión periódica de portafolio.
 
 ## Mapa de dependencias entre productos (obligatorio)
 
 La tesis de la empresa es la **conexión entre productos tecnológicos**: los productos interoperan (vía MCP) y se potencian. Eso tiene un costo: **matar uno puede romper otro**.
 
 - Cada producto mantiene un **mapa de dependencias**: qué consume de otros productos (APIs, datos, autenticación) y qué otros productos consumen de él.
-- El mapa se actualiza en cada traspaso de etapa y lo verifica el Jefe de Gabinete.
+- El mapa se actualiza en cada traspaso de etapa y lo verifica el Gerente General.
 - Ninguna decisión de cierre o discontinuación se toma sin revisar el mapa: si el producto tiene dependientes, hay que migrarlos o absorber la funcionalidad antes de matarlo.
 
 ## P&L por producto
@@ -29,7 +29,7 @@ La tesis de la empresa es la **conexión entre productos tecnológicos**: los pr
 
 Matar un producto con clientes activos exige un proceso, no un interruptor. Paso a paso:
 
-1. **Decisión.** Fabian aprueba la discontinuación con fecha de corte, tras revisar el mapa de dependencias y el P&L. Se nombra un responsable (típicamente el Jefe de Gabinete).
+1. **Decisión.** Fabian aprueba la discontinuación con fecha de corte, tras revisar el mapa de dependencias y el P&L. Se nombra un responsable (típicamente el Gerente General).
 2. **Comunicación a clientes.** Aviso con antelación razonable: qué se cierra, cuándo y por qué. Mensaje honesto, sin jerga. Todo agente que hable con clientes se identifica como IA.
 3. **Migración.** Ofrecer camino de salida: exportación de datos del cliente, y si existe, migración a otro producto del portafolio. Soporte durante la transición.
 4. **Reembolsos.** Devolver lo cobrado por períodos no prestados según los términos contratados. El Facturador genera la documentación; el Conciliador verifica. Dinero = aprobación de Fabian.

@@ -27,7 +27,7 @@ Lo irreversible se acumula en una **cola de aprobaciones** y Fabian lo resuelve 
 - El canal es un **bot propio de Telegram o correo** (costo $0): cada solicitud llega con contexto resumido (qué se pide, por qué, riesgo, monto si aplica) y botones de aprobar/rechazar.
 - Cada solicitud en la cola tiene prioridad y vencimiento. Si una solicitud vence sin respuesta, **no se ejecuta** (el valor por defecto es "no").
 - La decisión de Fabian (aprobar/rechazar, con motivo) queda registrada en [auditoria.md](auditoria.md).
-- El **presupuesto semanal de atención de Fabian** es el WIP maestro: la cantidad de solicitudes en cola se estrangula a sus horas reales. Si la cola crece más rápido de lo que puede procesar, el Jefe de Gabinete reduce el ritmo de las funciones que la alimentan.
+- El **presupuesto semanal de atención de Fabian** es el WIP maestro: la cantidad de solicitudes en cola se estrangula a sus horas reales. Si la cola crece más rápido de lo que puede procesar, el Gerente General reduce el ritmo de las funciones que la alimentan.
 
 ## Modo offline
 
@@ -50,4 +50,4 @@ Escalación = Fabian. Soporte, ventas y cualquier caso fuera de guion terminan e
 
 - Nunca aprobar por silencio: la falta de respuesta no es aprobación.
 - Nunca encadenar aprobaciones ("aprobado una vez, aprobado siempre"): cada acción irreversible se aprueba por separado, salvo que Fabian defina una regla explícita con límites (monto, frecuencia, ventana).
-- Nunca dejar que un agente apruebe en nombre de Fabian, ni siquiera el Jefe de Gabinete.
+- Nunca dejar que un agente apruebe en nombre de Fabian, ni siquiera el Gerente General.

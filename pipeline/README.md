@@ -9,7 +9,7 @@ La forma en que un producto nace, se valida, se vende y se opera en esta empresa
 | # | Etapa | En 1 línea |
 |---|---|---|
 | 0 | Búsqueda | Analista escanea el mercado en forma continua y mantiene una pila de tesis priorizada. |
-| 1 | Tesis | Fabian + Jefe de Gabinete formulan la hipótesis con criterios de cierre; equipo rojo antes de gastar un ciclo. |
+| 1 | Tesis | Fabian + Gerente General formulan la hipótesis con criterios de cierre; equipo rojo antes de gastar un ciclo. |
 | 2 | Validación | Se busca evidencia: precios validados con método, mapa de competencia y lista de lanzamiento. |
 | 3 | Construcción | Especificación escrita desde la evidencia → PMV + kit de ventas + legales base + lista de verificación $0. |
 | 4 | Uso interno | Uso interno con criterios de salida explícitos: ¿lo usaríamos nosotros? |

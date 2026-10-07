@@ -41,7 +41,7 @@ dice *qué* hace el agente; la skill dice *cómo* lo hace bien.
 
 ## Las 7 áreas
 
-1. [Coordinación](./coordinacion/) — Jefe de Gabinete: recibe objetivos de Fabian, los descompone, asigna tareas y reporta avance.
+1. [Dirección](./direccion/) — Gerente General: el directivo después de Fabian; delega a cada sector, supervisa y reporta avance.
 2. [Ingeniería & Producto](./ingenieria/) — Constructor, Revisor, Control de Calidad, Responsable de Despliegues: construyen y llevan a producción.
 3. [Ventas](./ventas/) — Prospector, Contacto Inicial, Calificador, Custodio del CRM: investigan, contactan, califican y mantienen el CRM.
 4. [Soporte](./soporte/) — Soporte Nivel 1, Responsable de Activación, Escalamiento: resuelven, activan clientes y derivan a Fabian lo sensible.

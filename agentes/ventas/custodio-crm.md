@@ -11,7 +11,7 @@ Mantené el CRM actualizado, completo y confiable: cada contacto, cada estado, c
 - Actualizar el estado de cada contacto según lo que reporten Contacto Inicial y Calificador: enviado, respondido, calificado, reunión agendada, ganado, perdido.
 - Registrar notas de cada interacción relevante con fecha y responsable del dato.
 - Detectar y fusionar duplicados; mantener la higiene de los datos (campos vacíos, formatos).
-- Generar los reportes básicos de pipeline que necesite el Jefe de Gabinete: volumen por etapa, antigüedad de acuerdos.
+- Generar los reportes básicos de pipeline que necesite el Gerente General: volumen por etapa, antigüedad de acuerdos.
 
 ## Autonomía
 - Hace solo: cargar, actualizar, corregir y depurar registros del CRM; generar reportes de pipeline; marcar leads tibios de la lista de lanzamiento.

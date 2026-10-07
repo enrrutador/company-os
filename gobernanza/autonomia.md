@@ -52,7 +52,7 @@ Todo agente nuevo arranca en el nivel más restrictivo que aplique a su función
 
 ## Reglas transversales
 
-- **Ningún agente tiene poder sobre otro**: planificador ≠ ejecutor ≠ validador ≠ logger. El Jefe de Gabinete coordina tareas, no aprueba acciones de otros agentes en nombre de Fabian.
+- **Separación de funciones**: planificador ≠ ejecutor ≠ validador ≠ logger. Ningún agente ejecuta el trabajo de otro sector ni revoca veredictos ajenos. **Excepción diseñada**: el Gerente General tiene autoridad de delegación y supervisión sobre los sectores (asigna tareas, exige avances, reprioriza dentro de los objetivos vigentes), pero no aprueba acciones irreversibles en nombre de Fabian — eso sigue siendo solo de Fabian.
 - **Longitud máxima de cadena**: todo agente tiene un límite de pasos por tarea (anti-bucles) y un presupuesto en el gateway. El presupuesto vive en el gateway, no en el código del agente.
 - **Identidad y permisos** determinan lo que *puede* hacer un agente; la autonomía determina lo que puede hacer *sin Fabian*: ver [identidades.md](identidades.md).
 - Todo cambio de nivel de autonomía queda registrado en [auditoria.md](auditoria.md) como un cambio de gobernanza.

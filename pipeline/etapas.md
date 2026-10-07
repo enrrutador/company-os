@@ -9,12 +9,12 @@ Detalle operativo de cada etapa. Convención: **quién ejecuta**, **artefacto de
 - **Ejecuta:** [Analista](../agentes/marketing/analista.md). Autónomo.
 - **Qué hace:** escanea mercado, competencia y pedidos de clientes en forma permanente; mantiene una **pila de tesis priorizada**. El pipeline nunca depende de la inspiración del momento.
 - **Artefacto de traspaso:** pila de tesis priorizada (cada entrada: problema, segmento, evidencia inicial).
-- **Compuerta:** ninguna; es continuo. El Jefe de Gabinete selecciona qué tesis entra a la etapa 1 según WIP disponible.
+- **Compuerta:** ninguna; es continuo. El Gerente General selecciona qué tesis entra a la etapa 1 según WIP disponible.
 
 ## 1. Tesis
 
-- **Ejecutan:** Fabian + [Jefe de Gabinete](../agentes/coordinacion/jefe-de-gabinete.md).
-- **Qué pasa:** se formula la hipótesis escrita + criterios de cierre + revisión de WIP. El **Jefe de Gabinete somete la hipótesis al equipo rojo** antes de gastar un ciclo de validación.
+- **Ejecutan:** Fabian + [Gerente General](../agentes/direccion/gerente-general.md).
+- **Qué pasa:** se formula la hipótesis escrita + criterios de cierre + revisión de WIP. El **Gerente General somete la hipótesis al equipo rojo** antes de gastar un ciclo de validación.
 - **Artefacto de traspaso:** hipótesis escrita, criterios de cierre definidos, revisión de WIP de Validación aprobada.
 - **Compuerta:** implícita de Fabian — si la tesis no sobrevive al equipo rojo o no hay WIP, no pasa.
 
@@ -30,7 +30,7 @@ Detalle operativo de cada etapa. Convención: **quién ejecuta**, **artefacto de
 - **Ejecutan:** [Constructor](../agentes/ingenieria/constructor.md), [Revisor](../agentes/ingenieria/revisor.md) (segundo par de ojos; planificador ≠ ejecutor), [Control de Calidad](../agentes/ingenieria/control-de-calidad.md) (autónomo). Despliegues: solo con aprobación de Fabian vía [Responsable de Despliegues](../agentes/ingenieria/responsable-despliegues.md).
 - **Qué pasa:** especificación escrita desde la evidencia → PMV + kit de ventas (resumen de una página, demo, precios) + legales base (términos, privacidad) + lista de verificación: dependencias evaluadas a costo $0, configuración de cobro por producto, nombre/marca/dominio.
 - **Artefacto de traspaso:** PMV funcional + kit de ventas + legales base + lista de verificación $0/cobro/nombre completa.
-- **Compuerta:** revisión del Jefe de Gabinete (que lo construido = lo validado); el pase al Uso interno lo habilita Fabian.
+- **Compuerta:** revisión del Gerente General (que lo construido = lo validado); el pase al Uso interno lo habilita Fabian.
 
 ## 4. Uso interno
 
@@ -41,7 +41,7 @@ Detalle operativo de cada etapa. Convención: **quién ejecuta**, **artefacto de
 
 ## 5. Lanzamiento
 
-- **Ejecutan:** [Jefe de Gabinete](../agentes/coordinacion/jefe-de-gabinete.md) coordina; [Contenidos](../agentes/marketing/contenidos.md) (on-the-loop: Fabian revisa antes de publicar), equipo comercial preparado.
+- **Ejecutan:** [Gerente General](../agentes/direccion/gerente-general.md) coordina; [Contenidos](../agentes/marketing/contenidos.md) (on-the-loop: Fabian revisa antes de publicar), equipo comercial preparado.
 - **Qué pasa:** se sale a vender con posicionamiento, materiales y equipo alineados.
 - **Artefacto de traspaso:** plan de lanzamiento ejecutado + materiales publicados + equipo comercial listo.
 - **Compuerta 3 — decide Fabian:** *aprobación para salir a vender*.
@@ -51,7 +51,7 @@ Detalle operativo de cada etapa. Convención: **quién ejecuta**, **artefacto de
 - **Ejecutan:** [Prospector](../agentes/ventas/prospector.md) (listas), [Contacto Inicial](../agentes/ventas/contacto-inicial.md) (on-the-loop: revisión antes de enviar en volumen), [Calificador](../agentes/ventas/calificador.md) (califica y agenda), [Custodio del CRM](../agentes/ventas/custodio-crm.md) (CRM actualizado).
 - **Qué pasa:** prospección saliente con cumplimiento (baja, límites de volumen, Ley 25.326 de datos personales); Calificador negocia dentro de **matriz pre-aprobada** (descuentos/condiciones); **revisión de acuerdos**: lo vendido = lo que existe.
 - **Artefacto de traspaso:** contrato (plantilla + firma electrónica) + **primer pago**. Venta concretada = contrato + primer pago, nada menos.
-- **Compuerta:** revisión de acuerdos del Jefe de Gabinete — si lo vendido no es lo que existe, no pasa a Activación.
+- **Compuerta:** revisión de acuerdos del Gerente General — si lo vendido no es lo que existe, no pasa a Activación.
 
 ## 7. Activación
 
