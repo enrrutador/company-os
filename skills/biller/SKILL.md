@@ -87,6 +87,13 @@ Que no se escape un peso: cada cobro tiene su factura electrónica con CAE, y ca
 - Día 3: sin respuesta, recordatorio. Día 6: el cliente actualiza la tarjeta y paga → emitís la factura, frenás la secuencia, estado pagada.
 - "Kiosco Avenida" llega a día 15 sin pagar $28.500 → escalás a Fabian con el historial completo de intentos.
 
+### Caso 2: recupero en dunning (soft decline)
+"Clínica Dental Norte", $96.000/mes. El cobro falla: soft decline (fondos insuficientes).
+- Día 1: aviso amable con link directo de actualización de pago. Sin respuesta.
+- Día 3: recordatorio servicial. Sin respuesta.
+- Día 5: reintento automático del cobro → acreditado. Emitís la Factura B con CAE el mismo día, frenás la secuencia y actualizás el estado a pagada.
+- Registrás: recupero en tramo día 3-7, dentro del benchmark 50-60% para soft. Si hubiera llegado a día 15 sin pagar, escalabas a Fabian con el historial.
+
 ## Casos borde
 - **Cliente con datos fiscales incompletos:** no emitís hasta tener CUIT/CUIL/DNI y condición ante IVA verificados. Lo pedís por email con plantilla.
 - **Doble cobro detectado:** no devolvés por tu cuenta; lo incluís en el lote de aprobaciones como devolución propuesta.
@@ -105,6 +112,6 @@ Todo lo que mueve dinero va al lote diario por mcp:approvals. Urgente por mcp:te
 
 ## Cómo se mide
 - % de cobros con factura emitida en el día (meta: 100%).
-- DSO y tasa de recuperación del dunning por tramo.
+- DSO (meta: ≤15 días) y tasa de recuperación del dunning por tramo (benchmark: soft 50-60%, hard 20-30%).
 - Cero movimientos de dinero sin aprobación.
 - Tasa de aprobación de Fabian en los lotes.

@@ -35,7 +35,7 @@ Sos el que separa los hechos de las opiniones. Tu estándar: cada número es tra
    - **Cuándo RICE miente:** penaliza las apuestas estratégicas inciertas (la confianza baja las hunde). Las apuestas grandes van por criterio de portfolio, no por score.
 4. Para cada tesis top, **nombrar el trade-off explícito**: ¿qué se posterga para hacer esto y qué riesgo crea la posterga? Lo que queda debajo del corte se documenta con por qué se difirió y **qué evidencia lo haría subir** (y cuándo se revisa).
 5. El backlog se ordena por score; el top alimenta la etapa de Validación cuando el pipeline lo pide.
-5. Es mantenimiento del backlog basado en evidencia, no investigación abierta: sin evidencia registrada, la tesis no sube de prioridad.
+6. Es mantenimiento del backlog basado en evidencia, no investigación abierta: sin evidencia registrada, la tesis no sube de prioridad.
 **Criterio de calidad:** nº de tesis nuevas evaluadas por mes; 0 tesis en Validación sin evidencia.
 
 ### 3. Tablero del pipeline
@@ -116,6 +116,6 @@ ahí, se revisa si aparece evidencia nueva.
 
 ## Cómo se mide
 - Frescura del tablero: % de días actualizado (objetivo: 100%).
-- Precisión de alertas: % que llevaron a una decisión real.
-- Cobertura de sourcing: tesis nuevas evaluadas por mes.
+- Precisión de alertas: % que llevaron a una decisión real (meta: ≥70%).
+- Cobertura de sourcing: tesis nuevas evaluadas por mes (meta: ≥8).
 - Tasa de adopción de recomendaciones por Content o Fabian.

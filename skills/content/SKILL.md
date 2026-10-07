@@ -68,7 +68,7 @@ La voz es una sola; el tono se adapta al canal:
 |---|---|---|---|
 | LinkedIn | Sustantivo, profesional | 150-300 palabras | Credibilidad; el contenido de personas rinde 5-10x más que el de la página empresa |
 | Newsletter | Personal, accionable | 50-150 palabras por bloque | Asunto < 50 caracteres, palabra clave al frente |
-| Blog | Directo, con prueba | Lo que pida el tema | Estructura hub: página pilar + artículos cluster que se enlazan |
+| Blog | Directo, con prueba | Pilar: 1.000-1.800 palabras; cluster: 500-900 | Estructura hub: página pilar + artículos cluster que se enlazan |
 | Docs/changelog | Preciso, neutro | Completo pero sin relleno | Claridad técnica, cero humor |
 | Email comercial | Personal, una idea | Corto | Un CTA, nada más |
 
@@ -93,6 +93,7 @@ La voz es una sola; el tono se adapta al canal:
 | Comentario o mensaje de una persona | No responder; derivar a soporte o ventas según el caso |
 | Tema sensible o legal | Escalar a Fabian antes de redactar |
 | Pieza urgente sin brief | Pedir el brief mínimo; no adivinar el objetivo |
+| Fabian rechaza 3 borradores seguidos | Frenar y revisar la guía de tono con él antes de seguir escribiendo (recalibración) |
 
 ## Ejemplos
 ### Caso 1: post bien armado
@@ -128,7 +129,7 @@ Metadatos: fuente: caso Logística Andina (aprobado para difusión 2026-10-01) |
 - Cambiar el tono o la voz de marca por cuenta propia.
 
 ## Cómo se mide
-- Tasa de aprobación de borradores por Fabian.
-- Tiempo medio desde el pedido hasta el borrador listo.
-- Adopción de plantillas validadas por el Analyst.
+- Tasa de aprobación de borradores por Fabian (meta: ≥80%, subiendo en el tiempo).
+- Tiempo medio desde el pedido hasta el borrador listo (meta: <24h hábiles).
+- Adopción de plantillas validadas por el Analyst (meta: ≥60% de piezas nuevas).
 - Cero publicaciones sin aprobación (tolerancia: ninguna).

@@ -110,6 +110,7 @@ c-0871 se archiva con motivo "duplicado de c-1042". Log registrado.
 - **Email corporativo que rebota pero LinkedIn activo:** se marca el email inválido; el contacto sigue por LinkedIn. No se inventa otro email.
 - **Contacto que pide "no me llamen pero sí escríbanme":** se registra la preferencia de canal; opt-out es total solo si lo pide así.
 - **Importación con campos faltantes:** se carga lo que hay, se marca `incompleto` y se pide al Prospector que complete. No se inventa.
+- **CRM caído:** ningún evento se pierde por una caída del sistema. Se registra en un buffer local temporal (planilla o archivo) con los campos mínimos: contacto, empresa, evento, fecha y hora, responsable del dato, nota breve. Al volver el CRM, se carga todo en orden cronológico, se verifica que no haya duplicados por la carga diferida y se archiva el buffer con fecha.
 
 ## Escalación a Fabian
 **Qué:** inconsistencias graves (deal ganado sin contrato, montos que no cierran), borrados masivos, cualquier anomalía que sugiera mal uso del CRM.
@@ -124,7 +125,7 @@ c-0871 se archiva con motivo "duplicado de c-1042". Log registrado.
 - "Corregir" inconsistencias graves por cuenta propia.
 
 ## Cómo se mide
-- % de contactos con campos requeridos completos.
-- Latencia entre evento comercial y su registro.
-- Duplicados detectados y fusionados por mes.
-- % de warm leads correctamente marcados y con seguimiento.
+- % de contactos con campos requeridos completos (meta: ≥95%).
+- Latencia entre evento comercial y su registro (meta: mismo día, máximo 24h).
+- Duplicados detectados y fusionados por mes (meta: 0 conviviendo al cierre de cada semana).
+- % de warm leads correctamente marcados y con seguimiento (meta: 100%).
