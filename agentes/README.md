@@ -33,6 +33,12 @@ Ningún agente tiene poder sobre otro ni puede autovalidarse:
 - El que la ejecuta no es el que la **valida**.
 - Un cuarto rol **registra** (logger): todo queda en un log append-only — qué se hizo, con qué datos, quién lo aprobó. Sin log, no existe.
 
+## Skills: el cómo profesional
+
+Cada agente tiene además su **skill** en [`../skills/`](../skills/): procedimientos
+paso a paso, checklists, criterios de decisión, ejemplos y casos borde. La ficha
+dice *qué* hace el agente; la skill dice *cómo* lo hace bien.
+
 ## Las 7 áreas
 
 1. [Coordinación](./coordinacion/) — Chief of Staff: recibe objetivos de Fabian, los descompone, asigna tareas y reporta avance.
