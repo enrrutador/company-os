@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Company OS — Panel de control</title>
+<style>
+  :root { --fondo:#0f1115; --panel:#1a1e26; --borde:#2a3040; --texto:#e8eaf0;
+          --suave:#9aa3b5; --acento:#4f8cff; --ok:#3ecf8e; --err:#ff6b6b; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--fondo); color:var(--texto);
+         font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  header { padding:18px 24px; border-bottom:1px solid var(--borde);
+           display:flex; align-items:center; gap:12px; }
+  header h1 { margin:0; font-size:20px; }
+  header span { color:var(--suave); font-size:13px; }
+  nav { display:flex; gap:4px; padding:12px 24px 0; }
+  nav button { background:none; border:none; color:var(--suave); padding:10px 16px;
+               font-size:15px; cursor:pointer; border-bottom:2px solid transparent; }
+  nav button.activa { color:var(--texto); border-bottom-color:var(--acento); }
+  main { padding:20px 24px 60px; max-width:1100px; }
+  .tab { display:none; } .tab.activa { display:block; }
+  .grilla { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; }
+  .tarjeta { background:var(--panel); border:1px solid var(--borde); border-radius:10px;
+             padding:16px; cursor:pointer; transition:border-color .15s; }
+  .tarjeta:hover { border-color:var(--acento); }
+  .tarjeta h3 { margin:0 0 4px; font-size:16px; }
+  .tarjeta p { margin:4px 0; color:var(--suave); font-size:13px; }
+  .etiqueta { display:inline-block; font-size:11px; background:#242b3a; color:var(--suave);
+              border-radius:20px; padding:3px 10px; margin-top:6px; }
+  .panel { background:var(--panel); border:1px solid var(--borde); border-radius:10px; padding:20px; }
+  textarea, input[type=text], input[type=password] {
+    width:100%; background:#11141b; border:1px solid var(--borde); color:var(--texto);
+    border-radius:8px; padding:10px 12px; font-size:14px; margin:6px 0 12px; }
+  textarea { min-height:110px; resize:vertical; font-family:inherit; }
+  label { font-size:13px; color:var(--suave); }
+  button.accion { background:var(--acento); color:#fff; border:none; border-radius:8px;
+                  padding:10px 22px; font-size:15px; cursor:pointer; }
+  button.accion:disabled { opacity:.5; cursor:wait; }
+  button.secundario { background:#242b3a; color:var(--texto); border:1px solid var(--borde);
+                     border-radius:8px; padding:8px 16px; cursor:pointer; }
+  .respuesta { white-space:pre-wrap; background:#11141b; border:1px solid var(--borde);
+               border-radius:8px; padding:14px; margin-top:14px; font-size:14px; line-height:1.55; }
+  .error { color:var(--err); margin-top:10px; }
+  .evento { border-bottom:1px solid var(--borde); padding:12px 0; font-size:14px; }
+  .evento .meta { color:var(--suave); font-size:12px; margin-bottom:4px; }
+  .evento .tarea { color:var(--suave); font-size:13px; margin:6px 0; }
+  .etapas { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
+  .etapa { background:var(--panel); border:1px solid var(--borde); border-radius:8px;
+           padding:8px 14px; font-size:13px; }
+  .etapa b { color:var(--acento); margin-right:6px; }
+  .fila-stats { display:flex; gap:14px; margin-bottom:18px; flex-wrap:wrap; }
+  .stat { background:var(--panel); border:1px solid var(--borde); border-radius:10px;
+          padding:14px 20px; }
+  .stat b { font-size:24px; display:block; }
+  .stat span { color:var(--suave); font-size:13px; }
+  .modal-fondo { position:fixed; inset:0; background:rgba(0,0,0,.6); display:none;
+                 align-items:flex-start; justify-content:center; padding:40px 16px; z-index:10; }
+  .modal-fondo.abierto { display:flex; }
+  .modal { background:var(--panel); border:1px solid var(--borde); border-radius:12px;
+           padding:24px; width:100%; max-width:640px; max-height:85vh; overflow:auto; }
+  .modal h2 { margin-top:0; }
+  .cerrar { float:right; background:none; border:none; color:var(--suave);
+            font-size:20px; cursor:pointer; }
+  .ayuda { font-size:12px; color:var(--suave); margin-top:-8px; margin-bottom:12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Company OS</h1><span>Panel de control — solo local</span>
+</header>
+<nav>
+  <button data-tab="agentes" class="activa">Agentes</button>
+  <button data-tab="auditoria">Auditoría</button>
+  <button data-tab="config">Configuración</button>
+  <button data-tab="empresa">Empresa</button>
+</nav>
+<main>
+  <section id="tab-agentes" class="tab activa">
+    <div class="grilla" id="grilla-agentes"></div>
+  </section>
+  <section id="tab-auditoria" class="tab">
+    <p><button class="secundario" onclick="cargarAuditoria()">Actualizar</button></p>
+    <div class="panel" id="lista-auditoria"></div>
+  </section>
+  <section id="tab-config" class="tab">
+    <div class="panel">
+      <h3 style="margin-top:0">Proveedor y modelos</h3>
+      <label>API key del proveedor</label>
+      <input type="password" id="cfg-LLM_API_KEY" placeholder="••••">
+      <div class="ayuda" id="ayuda-key"></div>
+      <label>Modelo base (agente por defecto)</label>
+      <input type="text" id="cfg-MODELO_BASE">
+      <label>Modelo de razonamiento (análisis pesado)</label>
+      <input type="text" id="cfg-MODELO_RAZONAMIENTO">
+      <label>Modelo ligero (alto volumen, bajo costo)</label>
+      <input type="text" id="cfg-MODELO_LIGERO">
+      <label>URL del proxy LiteLLM</label>
+      <input type="text" id="cfg-LITELLM_BASE_URL">
+      <button class="accion" onclick="guardarConfig()">Guardar</button>
+      <span id="config-msg" style="margin-left:12px"></span>
+      <p class="ayuda">Formato de modelo: <code>proveedor/modelo</code> (ej. <code>openai/gpt-4o-mini</code>,
+      <code>anthropic/claude-sonnet-4-20250514</code>). La key nunca sale de tu máquina.</p>
+    </div>
+  </section>
+  <section id="tab-empresa" class="tab">
+    <div class="fila-stats" id="stats-empresa"></div>
+    <h3>Pipeline de producto</h3>
+    <div class="etapas" id="etapas"></div>
+    <h3>Productos en portfolio</h3>
+    <div id="productos"></div>
+  </section>
+</main>
+
+<div class="modal-fondo" id="modal-fondo">
+  <div class="modal">
+    <button class="cerrar" onclick="cerrarModal()">✕</button>
+    <h2 id="modal-titulo"></h2>
+    <p id="modal-sub" style="color:var(--suave);font-size:13px"></p>
+    <label>Tarea para el agente</label>
+    <textarea id="modal-tarea" placeholder="Describí la tarea en lenguaje natural…"></textarea>
+    <button class="accion" id="btn-ejecutar" onclick="ejecutarAgente()">Ejecutar</button>
+    <div class="error" id="modal-error"></div>
+    <div class="respuesta" id="modal-respuesta" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let agenteActual = null;
+
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav button").forEach(x => x.classList.remove("activa"));
+  document.querySelectorAll(".tab").forEach(x => x.classList.remove("activa"));
+  b.classList.add("activa");
+  $("tab-" + b.dataset.tab).classList.add("activa");
+  if (b.dataset.tab === "auditoria") cargarAuditoria();
+  if (b.dataset.tab === "config") cargarConfig();
+  if (b.dataset.tab === "empresa") cargarEmpresa();
+});
+
+async function api(ruta, opts) {
+  const r = await fetch(ruta, opts);
+  return r.json();
+}
+
+async function cargarAgentes() {
+  const agentes = await api("/api/agentes");
+  $("grilla-agentes").innerHTML = agentes.map(a => `
+    <div class="tarjeta" onclick='abrirModal(${JSON.stringify(a.slug)})'>
+      <h3>${a.nombre}</h3>
+      <p>${a.area || ""}</p>
+      <span class="etiqueta">${a.modelo}</span>
+    </div>`).join("");
+  window._agentes = Object.fromEntries(agentes.map(a => [a.slug, a]));
+}
+function abrirModal(slug) {
+  const a = window._agentes[slug];
+  agenteActual = slug;
+  $("modal-titulo").textContent = a.nombre;
+  $("modal-sub").textContent = (a.area ? a.area + " · " : "") + a.modelo;
+  $("modal-tarea").value = "";
+  $("modal-error").textContent = "";
+  $("modal-respuesta").style.display = "none";
+  $("modal-fondo").classList.add("abierto");
+}
+function cerrarModal() { $("modal-fondo").classList.remove("abierto"); }
+$("modal-fondo").addEventListener("click", e => { if (e.target.id === "modal-fondo") cerrarModal(); });
+
+async function ejecutarAgente() {
+  const tarea = $("modal-tarea").value.trim();
+  if (!tarea) return;
+  const btn = $("btn-ejecutar");
+  btn.disabled = true; btn.textContent = "Ejecutando…";
+  $("modal-error").textContent = "";
+  try {
+    const r = await api("/api/ejecutar", { method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ slug: agenteActual, tarea }) });
+    if (r.ok) {
+      const el = $("modal-respuesta");
+      el.style.display = "block";
+      el.textContent = r.texto +
+        `\n\n— ${r.tokens_entrada ?? "?"} tokens entrada · ${r.tokens_salida ?? "?"} salida`;
+    } else {
+      $("modal-error").textContent = "Error: " + (r.error || "desconocido");
+    }
+  } catch (e) {
+    $("modal-error").textContent = "Error de conexión con el dashboard.";
+  }
+  btn.disabled = false; btn.textContent = "Ejecutar";
+}
+
+async function cargarAuditoria() {
+  const eventos = await api("/api/auditoria?limite=50");
+  $("lista-auditoria").innerHTML = eventos.length ? eventos.map(e => `
+    <div class="evento">
+      <div class="meta">${e.marca_tiempo || ""} · <b>${e.agente}</b> · ${e.modelo || ""} ·
+        ${e.tokens_entrada ?? "?"}+${e.tokens_salida ?? "?"} tokens</div>
+      <div class="tarea">${(e.tarea || "").slice(0, 160)}</div>
+      <div>${(e.respuesta || "").slice(0, 400)}</div>
+    </div>`).join("")
+    : "<p style='color:var(--suave)'>Todavía no hay ejecuciones registradas.</p>";
+}
+
+async function cargarConfig() {
+  const c = await api("/api/config");
+  for (const k of ["MODELO_BASE", "MODELO_RAZONAMIENTO", "MODELO_LIGERO", "LITELLM_BASE_URL"])
+    $("cfg-" + k).value = c[k] || "";
+  $("cfg-LLM_API_KEY").value = "";
+  $("cfg-LLM_API_KEY").placeholder = c.LLM_API_KEY.configurada
+    ? `••••${c.LLM_API_KEY.ultimos4} (configurada — dejá vacío para conservar)`
+    : "Pegá tu API key acá";
+  $("ayuda-key").textContent = c.LLM_API_KEY.configurada
+    ? "Key configurada. Solo completala si querés cambiarla."
+    : "Todavía no hay key configurada: sin esto los agentes no pueden correr.";
+}
+
+async function guardarConfig() {
+  const cuerpo = {};
+  for (const k of ["LLM_API_KEY", "MODELO_BASE", "MODELO_RAZONAMIENTO", "MODELO_LIGERO", "LITELLM_BASE_URL"])
+    cuerpo[k] = $("cfg-" + k).value;
+  const r = await api("/api/config", { method: "POST",
+    headers: {"Content-Type": "application/json"}, body: JSON.stringify(cuerpo) });
+  $("config-msg").textContent = r.ok ? "✓ Guardado" : "Error al guardar";
+  $("config-msg").style.color = r.ok ? "var(--ok)" : "var(--err)";
+  setTimeout(() => $("config-msg").textContent = "", 3000);
+  cargarConfig();
+}
+
+async function cargarEmpresa() {
+  const e = await api("/api/empresa");
+  $("stats-empresa").innerHTML = `
+    <div class="stat"><b>${e.agentes}</b><span>agentes</span></div>
+    <div class="stat"><b>${e.productos.length}</b><span>productos en portfolio</span></div>
+    <div class="stat"><b>${e.proxy_configurado ? "✓" : "✕"}</b><span>proveedor conectado</span></div>`;
+  $("etapas").innerHTML = e.etapas.map(t =>
+    `<div class="etapa"><b>${t.n}</b>${t.nombre}</div>`).join("");
+  $("productos").innerHTML = e.productos.length
+    ? e.productos.map(p => `<div class="etapa">${p}</div>`).join("")
+    : "<p style='color:var(--suave)'>Portfolio vacío: los productos entran por el pipeline.</p>";
+}
+
+cargarAgentes();
+</script>
+</body>
+</html>
