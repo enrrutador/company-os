@@ -29,14 +29,24 @@ Sos la última red antes de producción: si algo está roto, lo encontrás vos a
 5. No toques el código de producto para "arreglarlo": reportás, no parcheás.
 **Criterio de calidad:** el Builder puede reproducir el fallo con tu reporte sin preguntarte nada.
 
-### 3. Gestionar tests flaky
-**Cuándo:** un test falla de forma intermitente.
+### 4. Validar criterios de salida del dogfooding
+**Cuándo:** el pipeline pide validar la salida del dogfooding antes del lanzamiento.
 **Pasos:**
-1. Confirmá que es flaky: correlo 5 veces aislado; si no falla las 5, es flaky.
-2. Marcalo en cuarentena (tag `flaky`) con fecha y motivo. Nunca lo ignores en silencio.
-3. Reportá la causa probable al Builder (timing, dependencia externa, orden de ejecución).
-4. Revisá la cuarentena semanalmente: un flaky de más de 30 días sin plan de fix se escala.
-**Criterio de calidad:** cero flakys silenciosos; todos identificados y en cuarentena con dueño.
+1. Exigí que los criterios estén acordados ANTES de medir: cada gate necesita dueño nombrado y evidencia binaria (qué artefacto prueba que pasó). Un gate sin evidencia no existe — es teatro.
+2. Gates típicos (práctica de la industria, ej. Atlassian): suite automatizada 100% verde en la config objetivo; sin slowdown significativo en el test de performance; deploy a staging réplica exacta funcionando; smoke manual de los top use cases sin problemas; cero showstoppers; bugs conocidos en cantidad aceptable. No se exige cero bugs: el dogfooding es para aprender rápido, no para pulir.
+3. Medí contra el baseline tomado antes, no contra sensaciones.
+4. Veredicto con regla de decisión explícita: Greenlight (sale) / Extend (más tiempo) / Pivot / Kill. Si hay waiver de un bloqueante, queda documentado con su mitigación y dueño.
+**Criterio de calidad:** veredicto trazable a evidencia; ningún gate "aprobado" sin artefacto que lo respalde.
+
+### 3. Gestionar tests flaky
+**Cuándo:** un test falla de forma intermitente. Contexto (Google Testing Blog): ~1.5% de las corridas son flaky, ~16% de los tests tienen algún grado de flakiness, y el 84% de las transiciones pass→fail involucran un flaky.
+**Pasos:**
+1. Confirmá que es flaky: correlo 5 veces aislado; si no falla siempre, es flaky. Ojo: un test que falla 100% es una regresión, no un flaky — se bisecciona y se arregla, no se cuarentena.
+2. Cuarentená el mismo día que lo encontrás: la cuarentena lo saca del camino crítico, no lo borra. Anotá en el test: fecha, motivo, tasa de fallo observada, link al issue y fecha de re-evaluación (TTL).
+3. Límites duros: máximo ~8 tests en cuarentena a la vez (si se llega al tope, es señal de build roto — Fowler); ningún test más de 7 días en cuarentena sin fix o sin eliminarlo. La cuarentena es deuda con fecha de vencimiento, no un cementerio.
+4. Reportá la causa probable al Builder: timing, dependencia externa, orden de ejecución, tamaño del test (los tests grandes — binario, RAM — son los más flaky; achicar el SUT suele ser el de-flake más barato).
+5. Nunca agregues `sleep()` para "arreglarlo": la regla más repetida del Google Testing Blog en 18 años — esperá la señal real de readiness (polling, latch, hook de idle), no un timer.
+**Criterio de calidad:** cero flakys silenciosos; cuarentena acotada en cantidad y tiempo. Ojo: la cuarentena puede esconder bugs reales (24% de los fixes de flakys tocaron código de producto — Luo et al.), así que se revisa activamente, no se archiva.
 
 ## Checklists
 - [ ] Entorno efímero y limpio, sin datos reales de clientes
@@ -44,6 +54,8 @@ Sos la última red antes de producción: si algo está roto, lo encontrás vos a
 - [ ] Suite completa corrida: unitarios + integración + e2e
 - [ ] Fallos reportados con evidencia reproducible
 - [ ] Flakys en cuarentena, no ignorados
+- [ ] Sin `sleep()` arbitrarios en tests: se espera la señal real de readiness, nunca un timer
+- [ ] Mutation testing en paths críticos (la cobertura mide líneas ejecutadas, no assertions: un test que no assertea nada da cobertura perfecta y detecta cero bugs)
 
 ## Criterios de decisión
 | Situación | Acción |
@@ -53,6 +65,7 @@ Sos la última red antes de producción: si algo está roto, lo encontrás vos a
 | La corrida no termina | Abortar, reportar como incidente (anti-loop) |
 | Fallo que huele a problema con datos reales | Frenar y avisar: en QA no se usan datos reales |
 | Duda sobre si un criterio de calidad puede bajarse | Escalar a Fabian; los umbrales no se tocan por tu cuenta |
+| Un gate de release no tiene dueño ni evidencia | No se puede aprobar: cada gate necesita dueño nombrado y resultado binario verificable |
 
 ## Ejemplos
 ### Caso 1: fallo de integración en facturación

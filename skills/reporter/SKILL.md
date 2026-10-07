@@ -13,12 +13,13 @@ Convertís los números en el informe que Fabian lee para decidir. Tu estándar:
 **Cuándo:** dentro de los primeros 5 días hábiles del mes siguiente.
 **Pasos:**
 1. Extraé de mcp:ledger (lectura): ingresos y gastos del mes cerrado, con los mismos criterios de asignación de costos del mes anterior (consistencia histórica innegociable).
-2. Armá la estructura fija:
-   - Ingresos por producto
-   - (−) Costos directos (infra, comisiones de cobro, licencias)
-   - = Margen bruto
-   - (−) Gastos operativos (modelos LLM, herramientas, otros)
-   - = Resultado neto del mes
+2. Armá la estructura fija (formato SaaS, no un volcado del ledger):
+   - **Ingresos**: separar recurrentes (suscripciones) de no recurrentes (setup, servicios puntuales). Por producto.
+   - **(−) COGS**: solo costos directos de prestar el servicio: hosting/infra asignable, comisiones de cobro, salarios de soporte atribuibles, licencias embebidas.
+   - **= Margen bruto** (benchmark SaaS sano: 70-80%+; best-in-class 80-90% en recurrente).
+   - **(−) OpEx por departamento**: Ventas, Marketing, I+D, G&A, Customer Success. Sin "overhead" genérico prorrateado a ojo: lo no asignable va a G&A.
+   - **= Resultado operativo (EBITDA)** → (−) intereses e impuestos → **= Resultado neto**.
+   - No capitalizar desarrollo de software como activo salvo criterio explícito aprobado por Fabian.
 3. Compará contra presupuesto y contra el mes anterior; marcá desvíos >10% o >$50.000 (el menor de ambos).
 4. Para cada desvío relevante: hipótesis de causa en 1-2 líneas (dato, no opinión).
 5. Si Reconciler tiene inconsistencias abiertas del período: el informe lo declara en un recuadro visible, no presenta números "limpios".
@@ -38,17 +39,34 @@ Convertís los números en el informe que Fabian lee para decidir. Tu estándar:
 **Cuándo:** junto con el P&L mensual.
 **Pasos:**
 1. Real del mes: cobros y pagos efectivamente movidos (mcp:payments, mcp:bank).
-2. Proyectado 90 días: ingresos recurrentes esperados, costos fijos conocidos, dunning en curso con tasa histórica de recupero.
-3. Marcá las estimaciones como tales ("estimado", no como hecho).
-4. Alertá si la proyección muestra bache de caja en 60 días.
-**Criterio de calidad:** el proyectado se revisa contra el real del mes siguiente (calibración).
+2. Proyectado **rodante 13 semanas** (se actualiza cada semana, no cada mes): ingresos recurrentes esperados, costos fijos conocidos, dunning en curso con tasa histórica de recupero.
+3. Segmentá clientes por **comportamiento de pago**, no solo por tamaño: el que paga siempre tarde proyecta distinto al que paga en fecha aunque deban lo mismo. Separá AR cobrable de AR bloqueado (en disputa, con error de facturación).
+4. Marcá las estimaciones como tales ("estimado", no como hecho).
+5. **Análisis de varianza semanal**: real vs proyectado por línea. Las líneas que se desvían sistemáticamente ajustan el modelo; sin este loop, el forecast repite los mismos errores para siempre. No enmascarar: desagregar para que errores que se compensan no se escondan.
+6. Alertá si la proyección muestra bache de caja en 60 días. Métricas de apoyo: DSO, % de AR en disputa, días promedio de pago por segmento.
+**Criterio de calidad:** el proyectado se revisa contra el real del mes siguiente (calibración); la varianza achica mes a mes.
+
+### 4. Calcular unit economics
+**Cuándo:** trimestral (o cuando Fabian lo pida para decidir si escalar).
+**Pasos:**
+1. Calculá con fórmulas estándar:
+   - **CAC** = (gasto en ventas + marketing del período) / clientes nuevos del período. Cargado: incluir todo el costo comercial, no solo "marketing".
+   - **LTV** = (ARPU × margen bruto %) / churn mensual. Si hay expansión relevante: / (churn − expansión).
+   - **CAC payback (meses)** = CAC / (ARPU × margen bruto %).
+   - **NRR** = (ARR inicial + expansión − contracción − churn) / ARR inicial. **GRR** igual pero sin expansión.
+2. Compará contra benchmarks: LTV:CAC ≥3:1 (sano), payback <12 meses, NRR >110% (best >120%), margen bruto SaaS 70%+, Rule of 40 (crecimiento % + margen operativo % ≥40).
+3. Tabla de decisión: LTV:CAC <1 → frenar escala; 1-2 → optimizar antes de escalar; 3-5 → escalar; >5 → escalar agresivo.
+**Criterio de calidad:** los números reconcilian con el P&L (el CAC que informa marketing tiene que cerrar con el gasto real del ledger).
 
 ## Checklists
 - [ ] Mismo criterio contable que el mes anterior
+- [ ] Ingresos recurrentes separados de no recurrentes
+- [ ] OpEx por departamento (sin overhead genérico)
 - [ ] Cada número trazable a su fuente
 - [ ] Estimaciones marcadas como tales
 - [ ] Desvíos relevantes con hipótesis de causa
 - [ ] Inconsistencias abiertas de Reconciler declaradas si existen
+- [ ] Forecast de caja rodante actualizado esta semana
 - [ ] Publicado dentro de los 5 días hábiles
 
 ## Criterios de decisión
@@ -59,6 +77,8 @@ Convertís los números en el informe que Fabian lee para decidir. Tu estándar:
 | Datos fuente inconsistentes | Declararlo en el informe; escalar a Fabian |
 | Costo compartido sin criterio de prorrateo | No inventar: proponer criterio y esperar aprobación |
 | Reconciler con inconsistencias abiertas | Recuadro visible en el informe |
+| LTV:CAC <3:1 o payback >12 meses | Alertar en el informe: unit economics débiles para escalar |
+| Línea del forecast desviada 3+ semanas seguidas | Ajustar el supuesto del modelo, no el número |
 
 ## Ejemplos
 ### Caso 1: P&L septiembre 2026 (ficticio)
@@ -69,6 +89,7 @@ Convertís los números en el informe que Fabian lee para decidir. Tu estándar:
 - **Resultado neto: $520.000.**
 - Desvío: gasto en modelos +22% vs agosto ($180.000 vs $147.000). Hipótesis: aumento de tráfico del Producto A en la última semana (dato de Guardian: +31% tokens).
 - P&L por producto: A margen 68%, B margen 41% → B en observación para el pipeline.
+- Unit economics (trimestral): LTV:CAC 4,2:1, payback 9 meses, NRR 112% → sanos para escalar.
 - Nota: Reconciler reportó 1 inconsistencia abierta (cobro sin factura $127.500) — declarada en recuadro.
 
 ## Casos borde
