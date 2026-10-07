@@ -1,4 +1,4 @@
-"""Registro y ejecución de los 18 agentes.
+"""Registro y ejecución de los 25 agentes.
 
 Cada agente se define por su ficha (el QUÉ) + su SKILL.md (el CÓMO).
 El prompt del sistema se compone de ambos archivos del repo.
