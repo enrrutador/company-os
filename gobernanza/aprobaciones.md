@@ -46,6 +46,14 @@ Escalación = Fabian. Soporte, ventas y cualquier caso fuera de guion terminan e
 - **Calificador** escala negociaciones fuera de matriz y señales de abandono en cuentas clave.
 - El diseño de cada agente debe **minimizar escalaciones** con reglas claras, pero el camino al humano siempre existe (lección de Klarna 2024–2026: recortar humanos de más degradó la calidad y hubo que recontratar).
 
+## Frenos de emergencia (bloquean, no aprueban)
+
+Tres agentes pueden **frenar** (nunca aprobar en nombre de Fabian). Todo freno se registra, se alerta de inmediato y se levanta corrigiendo la causa o con decisión explícita de Fabian:
+
+1. **Guardián** — interruptor de emergencia: frena agentes con gasto o comportamiento anormal según umbrales de Fabian.
+2. **Ingeniero de Seguridad** — frena un despliegue por riesgo crítico de seguridad documentado.
+3. **SRE** — con el error budget agotado se frenan lanzamientos no críticos hasta recuperar (lo decide con el Gerente General).
+
 ## Qué NO hacer
 
 - Nunca aprobar por silencio: la falta de respuesta no es aprobación.

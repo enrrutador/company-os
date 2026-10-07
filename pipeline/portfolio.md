@@ -6,7 +6,7 @@ El pipeline crea productos; esta capa decide cuáles viven, cuáles compiten y c
 
 Los productos no existen en el vacío: compiten entre sí por dos recursos escasos.
 
-1. **Capacidad de agentes.** Los equipos (Constructor, Revisor, Control de Calidad, comercial, soporte) son compartidos. El Gerente General asigna capacidad según prioridad del portafolio, respetando el WIP máximo por etapa (ver [reglas.md](reglas.md)). Un producto en Construcción ocupa el lugar de Construcción: los demás esperan o mueren.
+1. **Capacidad de agentes.** Los equipos (Arquitecto, Constructor, Revisor, Control de Calidad, Datos/ML, comercial, soporte) son compartidos. El Gerente General asigna capacidad según prioridad del portafolio, respetando el WIP máximo por etapa (ver [reglas.md](reglas.md)). Un producto en Construcción ocupa el lugar de Construcción: los demás esperan o mueren.
 2. **Atención de Fabian.** Es el WIP maestro: compuertas, equipos rojos, entrevistas clave y escalaciones. El presupuesto semanal se reparte entre productos; el que no entra en el presupuesto, se pausa.
 
 La priorización la propone el Gerente General con datos del tablero y la decide Fabian en la revisión periódica de portafolio.

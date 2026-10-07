@@ -14,28 +14,36 @@ Detalle operativo de cada etapa. Convención: **quién ejecuta**, **artefacto de
 ## 1. Tesis
 
 - **Ejecutan:** Fabian + [Gerente General](../agentes/direccion/gerente-general.md).
-- **Qué pasa:** se formula la hipótesis escrita + criterios de cierre + revisión de WIP. El **Gerente General somete la hipótesis al equipo rojo** antes de gastar un ciclo de validación.
+- **Qué pasa:** se formula la hipótesis escrita + criterios de cierre + revisión de WIP. El **Gerente General somete la hipótesis al equipo rojo** (Arquitecto + Ingeniero de Seguridad + Analista: viabilidad técnica, riesgos y evidencia) antes de gastar un ciclo de validación.
 - **Artefacto de traspaso:** hipótesis escrita, criterios de cierre definidos, revisión de WIP de Validación aprobada.
 - **Compuerta:** implícita de Fabian — si la tesis no sobrevive al equipo rojo o no hay WIP, no pasa.
 
 ## 2. Validación
 
-- **Ejecutan:** [Analista](../agentes/marketing/analista.md) (investigación) con entrevistas asincrónicas por agentes (formularios, landing, chat); Fabian solo cierra 2–3 entrevistas clave.
+- **Ejecutan:** [Analista](../agentes/marketing/analista.md) (investigación) con entrevistas asincrónicas por agentes (formularios, landing, chat); [Constructor](../agentes/ingenieria/constructor.md) arma la landing de validación; [Facturador](../agentes/finanzas/facturador.md) deja lista la infra de cobro para la preventa; Fabian solo cierra 2–3 entrevistas clave.
 - **Qué pasa:** se busca evidencia real. **Precios validados con método** (prueba en landing/preventa a precio real, no "¿pagarías X?"). La preventa exige infra de cobro lista y promesa explícita (reembolsable).
 - **Artefacto de traspaso:** evidencia documentada + precios validados + **mapa de competencia** + **lista de lanzamiento** (entrevistados → CRM como prospectos interesados).
 - **Compuerta 1 — decide Fabian:** *se construye o se mata*. SLA 48h; sin decisión, la etapa se pausa sola.
 
 ## 3. Construcción
 
-- **Ejecutan:** [Constructor](../agentes/ingenieria/constructor.md), [Revisor](../agentes/ingenieria/revisor.md) (segundo par de ojos; planificador ≠ ejecutor), [Control de Calidad](../agentes/ingenieria/control-de-calidad.md) (autónomo). Despliegues: solo con aprobación de Fabian vía [Responsable de Despliegues](../agentes/ingenieria/responsable-despliegues.md).
-- **Qué pasa:** especificación escrita desde la evidencia → PMV + kit de ventas (resumen de una página, demo, precios) + legales base (términos, privacidad) + lista de verificación: dependencias evaluadas a costo $0, configuración de cobro por producto, nombre/marca/dominio.
+- **Ejecutan (en secuencia):**
+  1. [Gerente General](../agentes/direccion/gerente-general.md): escribe la **especificación funcional** desde la evidencia de validación (qué se construye, para quién, criterios de aceptación).
+  2. [Arquitecto](../agentes/ingenieria/arquitecto.md): diseña la arquitectura y registra ADRs.
+  3. [Diseñador UX/UI](../agentes/ingenieria/disenador-ux-ui.md): flujos y pantallas; el diseño entra antes del código.
+  4. [Constructor](../agentes/ingenieria/constructor.md) (web full-stack), [Desarrollador Mobile](../agentes/ingenieria/desarrollador-mobile.md) (apps), [Ingeniero de Datos](../agentes/ingenieria/ingeniero-datos.md) (pipelines), [Ingeniero de ML](../agentes/ingenieria/ingeniero-ml.md) (modelos): construyen en paralelo según el producto.
+  5. [Revisor](../agentes/ingenieria/revisor.md) (código; planificador ≠ ejecutor ≠ validador) + [Ingeniero de Seguridad](../agentes/ingenieria/ingeniero-seguridad.md) (cambios sensibles).
+  6. [Control de Calidad](../agentes/ingenieria/control-de-calidad.md) (autónomo) + QA visual del Diseñador UX/UI.
+  7. [SRE](../agentes/ingenieria/sre.md): define SLOs y observabilidad base del producto.
+  8. [Responsable de Despliegues](../agentes/ingenieria/responsable-despliegues.md): despliega solo con aprobación de Fabian.
+- **Qué pasa:** especificación → PMV + kit de ventas (resumen de una página, demo, precios) + legales base (términos, privacidad: plantillas que mantiene el Gerente General, aprueba Fabian) + lista de verificación: dependencias evaluadas a costo $0, configuración de cobro por producto, nombre/marca/dominio.
 - **Artefacto de traspaso:** PMV funcional + kit de ventas + legales base + lista de verificación $0/cobro/nombre completa.
 - **Compuerta:** revisión del Gerente General (que lo construido = lo validado); el pase al Uso interno lo habilita Fabian.
 
 ## 4. Uso interno
 
-- **Ejecutan:** los propios agentes + Fabian como usuario.
-- **Qué pasa:** se usa el producto de verdad, con **criterios de salida explícitos**: ¿lo usaríamos nosotros? ¿pasa el umbral?
+- **Ejecutan:** los propios agentes + Fabian como usuario; coordina el [Gerente General](../agentes/direccion/gerente-general.md).
+- **Qué pasa:** se usa el producto de verdad, con **criterios de salida explícitos** (definidos por el Gerente General en la especificación de la etapa 3): ¿lo usaríamos nosotros? ¿pasa el umbral?
 - **Artefacto de traspaso:** resultados del uso interno contra los criterios de salida (pasa/no pasa, con evidencia).
 - **Compuerta 2 — decide Fabian:** el producto pasa el umbral para avanzar al lanzamiento.
 
@@ -56,14 +64,14 @@ Detalle operativo de cada etapa. Convención: **quién ejecuta**, **artefacto de
 ## 7. Activación
 
 - **Ejecuta:** [Responsable de Activación](../agentes/soporte/responsable-activacion.md).
-- **Qué pasa:** configuración del cliente, migración de datos, primera victoria. Bóveda de credenciales de clientes (mínimo privilegio). Aislamiento de datos: tenancy por producto/cliente; ningún agente cruza datos entre clientes.
+- **Qué pasa:** configuración del cliente, migración de datos, primera victoria. Bóveda de credenciales de clientes (mínimo privilegio): la mantiene el Responsable de Activación, auditada por el Guardián. Aislamiento de datos: tenancy por producto/cliente; ningún agente cruza datos entre clientes. El Responsable de Activación acompaña al cliente los primeros 90 días (retención temprana; el rol dedicado de éxito del cliente se crea en fase 2).
 - **Artefacto de traspaso:** cliente activo = configuración completa + primer valor entregado (verificable).
 - **Compuerta:** ninguna de Fabian; el criterio es objetivo. **Recién acá la venta está realmente cerrada.**
 
 ## 8. Operación
 
-- **Ejecutan:** [Soporte Nivel 1](../agentes/soporte/soporte-n1.md), [Facturador](../agentes/finanzas/facturador.md) (facturación electrónica ARCA), [Conciliador](../agentes/finanzas/conciliador.md) (concilia y alerta), [Responsable de Informes](../agentes/finanzas/responsable-informes.md) (P&L por producto), [Guardián](../agentes/operaciones/guardian.md) (monitoreo de infra y costo, interruptor de emergencia).
-- **Qué pasa:** entregan, cobran (gestión de cobranza automatizada), soportan con SLAs definidos, miden **P&L por producto**.
+- **Ejecutan:** [Soporte Nivel 1](../agentes/soporte/soporte-n1.md), [SRE](../agentes/ingenieria/sre.md) (SLOs, incidentes, error budgets), [Facturador](../agentes/finanzas/facturador.md) (facturación electrónica ARCA), [Conciliador](../agentes/finanzas/conciliador.md) (concilia y alerta), [Responsable de Informes](../agentes/finanzas/responsable-informes.md) (P&L por producto), [Guardián](../agentes/operaciones/guardian.md) (monitoreo de infra y costo, interruptor de emergencia).
+- **Qué pasa:** entregan, cobran (gestión de cobranza automatizada), soportan con SLAs definidos, responden incidentes con post-mortems sin culpas, miden **P&L por producto**.
 - **Artefacto de traspaso:** P&L por producto al día + SLAs cumplidos (reporte continuo, no un pase único).
 - **Compuerta:** revisión periódica de portafolio (ver [portfolio.md](portfolio.md)): lo que no tracciona se mata o se pausa.
 
