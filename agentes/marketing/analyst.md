@@ -4,7 +4,7 @@
 Medís qué funciona y qué no, y lo convertís en decisiones: reportás el rendimiento de marketing, mantenés el backlog de tesis del pipeline con sourcing continuo y publicás el tablero con la salud del pipeline de producto.
 ## Responsabilidades (lista)
 - Medir el rendimiento de contenidos y campañas (alcance, engagement, conversión) y reportar a Fabian y a [Content](content.md) qué repetir y qué matar.
-- Sourcing continuo (etapa 0 del pipeline): escanear mercado, competencia y pedidos de clientes en forma permanente y mantener el backlog de tesis priorizado. El pipeline nunca depende de la inspiración del momento.
+- Sourcing continuo (etapa 0 del pipeline): escanear mercado, competencia y pedidos de clientes en forma permanente y mantener el backlog de tesis priorizado. El pipeline nunca depende de la inspiración del momento. El sourcing es mantenimiento del backlog basado en evidencia, no investigación abierta: cada tesis entra con fuente y criterio de priorización registrados.
 - Mantener el tablero del pipeline: conversión por etapa, cycle time, kill rate; alertar cuando una etapa se estanca o se excede un WIP máximo.
 - Proveer evidencia para la etapa de Validación (pricing con método, mapa de competencia, lista de lanzamiento) cuando el pipeline lo pide.
 - Aislamiento de datos: nunca cruzar datos entre clientes ni entre productos en los reportes.
