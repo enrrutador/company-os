@@ -30,10 +30,10 @@ pip install -r requirements.txt
 # 3. Ejecutar un agente
 python3 ejecutar.py conciliador "Revisá estas 5 facturas y marcá inconsistencias: ..."
 python3 ejecutar.py contenidos "Dame 3 ideas de post sobre automatización" --modelo empresa-ligero
-python3 ejecutar.py jefe-de-gabinete "Resumí el estado de la empresa en 5 líneas"
+python3 ejecutar.py gerente-general "Resumí el estado de la empresa en 5 líneas"
 ```
 
-Los 18 slugs disponibles: `jefe-de-gabinete`, `constructor`, `revisor`,
+Los 18 slugs disponibles: `gerente-general`, `constructor`, `revisor`,
 `control-de-calidad`, `responsable-despliegues`, `prospector`, `contacto-inicial`,
 `calificador`, `custodio-crm`, `soporte-n1`, `responsable-activacion`,
 `escalamiento`, `contenidos`, `analista`, `facturador`, `conciliador`,
@@ -45,7 +45,7 @@ Cada agente tiene un modelo por defecto del proxy:
 
 | Modelo del proxy | Agentes |
 |---|---|
-| `empresa-razonamiento` | jefe-de-gabinete, revisor, escalamiento, analista, guardian |
+| `empresa-razonamiento` | gerente-general, revisor, escalamiento, analista, guardian |
 | `empresa-base` | constructor, control-de-calidad, responsable-despliegues, prospector, contacto-inicial, calificador, responsable-activacion, contenidos, facturador, conciliador, responsable-informes |
 | `empresa-ligero` | custodio-crm, soporte-n1 |
 

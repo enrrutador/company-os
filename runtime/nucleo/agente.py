@@ -7,7 +7,7 @@ import os
 
 # slug -> (ficha relativa a la raíz del repo, modelo del proxy)
 REGISTRO = {
-    "jefe-de-gabinete": ("agentes/coordinacion/jefe-de-gabinete.md", "empresa-razonamiento"),
+    "gerente-general": ("agentes/direccion/gerente-general.md", "empresa-razonamiento"),
     "constructor": ("agentes/ingenieria/constructor.md", "empresa-base"),
     "revisor": ("agentes/ingenieria/revisor.md", "empresa-razonamiento"),
     "control-de-calidad": ("agentes/ingenieria/control-de-calidad.md", "empresa-base"),
