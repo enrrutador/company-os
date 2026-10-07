@@ -4,7 +4,7 @@
 
 ## Verificación
 
-- [ ] Links relativos verificados (no rotos, ninguno fuera del repo)
+- [ ] Enlaces relativos verificados (no rotos, ninguno fuera del repo)
 - [ ] Índices y READMEs actualizados si corresponde
 - [ ] Sin secretos ni credenciales en los archivos
 
