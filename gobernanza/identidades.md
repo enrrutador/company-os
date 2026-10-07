@@ -4,7 +4,7 @@
 
 ## Principio
 
-**Cada agente es una identidad no-humana propia.** Igual que un empleado tiene su usuario y su tarjeta de acceso, cada uno de los 18 agentes tiene credenciales propias, permisos mínimos y un dueño humano nombrado. **El dueño de cada identidad es Fabian**, para siempre.
+**Cada agente es una identidad no-humana propia.** Igual que un empleado tiene su usuario y su tarjeta de acceso, cada uno de los 25 agentes tiene credenciales propias, permisos mínimos y un dueño humano nombrado. **El dueño de cada identidad es Fabian**, para siempre.
 
 Lo que una identidad *puede* hacer está limitado por sus permisos; lo que puede hacer *sin aprobación* está limitado por su nivel de autonomía ([autonomia.md](autonomia.md)). Son dos capas distintas y ambas aplican siempre.
 

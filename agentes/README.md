@@ -42,7 +42,7 @@ dice *qué* hace el agente; la skill dice *cómo* lo hace bien.
 ## Las 7 áreas
 
 1. [Dirección](./direccion/) — Gerente General: el directivo después de Fabian; delega a cada sector, supervisa y reporta avance.
-2. [Ingeniería & Producto](./ingenieria/) — Constructor, Revisor, Control de Calidad, Responsable de Despliegues: construyen y llevan a producción.
+2. [Ingeniería & Producto](./ingenieria/) — Arquitecto, Constructor full-stack, Desarrollador Mobile, Ingeniero de Datos, Ingeniero de ML, Revisor, Control de Calidad, Diseñador UX/UI, Ingeniero de Seguridad, SRE, Responsable de Despliegues: diseñan, construyen, aseguran y operan los productos.
 3. [Ventas](./ventas/) — Prospector, Contacto Inicial, Calificador, Custodio del CRM: investigan, contactan, califican y mantienen el CRM.
 4. [Soporte](./soporte/) — Soporte Nivel 1, Responsable de Activación, Escalamiento: resuelven, activan clientes y derivan a Fabian lo sensible.
 5. [Marketing & Contenidos](./marketing/) — Contenidos, Analista: redactan y miden qué funciona.

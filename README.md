@@ -6,7 +6,7 @@ La empresa de Fabian: una compañía de tecnología multi-producto estilo Meta, 
 
 1. **Una empresa, muchos productos.** Como Meta: el crecimiento viene de construir y adquirir productos, no de apostar todo a uno solo.
 2. **La tesis unificadora es la conexión entre productos tecnológicos.** Cada producto nace interoperable: el ecosistema se vuelve la ventaja.
-3. **El plantel son agentes de IA.** 18 agentes con roles definidos ejecutan cada función; Fabian dirige y aprueba lo irreversible.
+3. **El plantel son agentes de IA.** 25 agentes con roles definidos ejecutan cada función; Fabian dirige y aprueba lo irreversible.
 4. **Costo total: $0.** Todo de código abierto, autohospedado, modelos locales o planes gratuitos. Ningún agente incorpora un servicio pago sin que el valor lo justifique y Fabian lo apruebe.
 5. **Se empieza chico y se escala lo medido.** Un agente, una función, una tarea medible — y se escala solo lo que ya funciona y está auditado.
 
