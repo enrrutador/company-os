@@ -2,12 +2,12 @@
 """Examen exhaustivo punta a punta de la empresa (Company OS).
 
 Verifica punto por punto que todo esté configurado y conectado:
-  1. Registry <-> fichas <-> skills (bidireccional, 25 agentes).
-  2. Los 25 prompts se componen (ficha + skill + transversal autocapacitación).
+  1. Registry <-> fichas <-> skills (bidireccional, 26 agentes).
+  2. Los 26 prompts se componen (ficha + skill + transversal autocapacitación).
   3. Dashboard: API de agentes, empresa y config (con servidor real).
   4. Ejecución vía dashboard contra un mock (agente nuevo y uno viejo).
   5. Consistencia documental: links relativos, referencias a agentes en el pipeline,
-     conteos ("25 agentes") y los tres frenos en gobernanza.
+     conteos ("26 agentes") y los tres frenos en gobernanza.
 
 Uso:  python3 pruebas/test_exhaustivo.py
 Salida: reporte con OK/FALLO por punto y código de salida.
@@ -40,7 +40,7 @@ def check(nombre, cond, detalle=""):
 from nucleo import agente  # noqa: E402
 
 slugs = agente.slugs()
-check("registry tiene 25 agentes", len(slugs) == 25, f"hay {len(slugs)}")
+check("registry tiene 26 agentes", len(slugs) == 26, f"hay {len(slugs)}")
 
 fichas_en_disco = set()
 for root, _, fns in os.walk(os.path.join(REPO, "agentes")):
@@ -73,8 +73,8 @@ for s in slugs:
             transversal_ok += 1
     except Exception as e:  # noqa: BLE001
         FALLOS.append(f"prompt roto: {s} ({e})")
-check("25/25 prompts se componen", prompts_ok == 25, f"{prompts_ok}/25")
-check("25/25 prompts incluyen autocapacitación", transversal_ok == 25, f"{transversal_ok}/25")
+check("26/26 prompts se componen", prompts_ok == 26, f"{prompts_ok}/26")
+check("26/26 prompts incluyen autocapacitación", transversal_ok == 26, f"{transversal_ok}/26")
 
 # ---------------------------------------------------------------- 3 y 4
 MOCK_TXT = "MOCK exhaustivo OK"
@@ -120,14 +120,14 @@ def post(path, body):
 
 
 agentes_api = get("/api/agentes")
-check("dashboard /api/agentes trae 25", len(agentes_api) == 25, f"trae {len(agentes_api)}")
+check("dashboard /api/agentes trae 26", len(agentes_api) == 26, f"trae {len(agentes_api)}")
 check("dashboard incluye a los 7 nuevos",
       all(a in [x["slug"] for x in agentes_api]
           for a in ["arquitecto", "ingeniero-datos", "ingeniero-ml",
                     "desarrollador-mobile", "ingeniero-seguridad", "sre", "disenador-ux-ui"]))
 
 empresa = get("/api/empresa")
-check("dashboard /api/empresa: 25 agentes", empresa["agentes"] == 25)
+check("dashboard /api/empresa: 26 agentes", empresa["agentes"] == 26)
 check("dashboard /api/empresa: 10 etapas", len(empresa["etapas"]) == 10)
 
 for slug_prueba in ["arquitecto", "conciliador"]:

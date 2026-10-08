@@ -2,9 +2,10 @@
 """Dashboard web local de la empresa (Company OS).
 
 Panel visual para manejar y configurar todo sin tocar la terminal:
-  - Agentes: ver los 25, asignarles tareas, leer respuestas.
-  - Auditoría: quién hizo qué, cuándo, cuántos tokens.
-  - Configuración: API key y modelos en formulario (sin editar archivos).
+  - Agentes: ver los 25, buscarlos, asignarles tareas, leer respuestas.
+  - Auditoría: quién hizo qué, cuándo, cuántos tokens (filtrable, expandible).
+  - Configuración: API key y modelos en formulario, con prueba de conexión
+    en vivo contra el proveedor (detecta modelos muertos antes de ejecutar).
   - Empresa: pipeline y productos de un vistazo.
 
 Uso:
@@ -12,7 +13,8 @@ Uso:
 
     Abrir en el navegador: http://localhost:8080
 
-Solo biblioteca estándar (sin dependencias nuevas). Escucha únicamente en
+Solo biblioteca estándar (sin dependencias nuevas), salvo la importación
+perezosa de `openai` al ejecutar o probar modelos. Escucha únicamente en
 127.0.0.1: nunca exponer a internet — la configuración incluye secretos.
 """
 import argparse
@@ -20,6 +22,7 @@ import json
 import os
 import re
 import sys
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
 
@@ -29,8 +32,9 @@ RUTA_ENV = os.path.join(RAIZ_REPO, "infraestructura", "litellm", ".env")
 
 sys.path.insert(0, os.path.join(RAIZ_REPO, "runtime"))
 from nucleo import agente as modulo_agente  # noqa: E402
-# NOTA: `nucleo.cliente` (requiere `openai`) se importa perezoso solo al ejecutar,
-# para que el dashboard abra sin dependencias más allá de la biblioteca estándar.
+# NOTA: `nucleo.cliente` (requiere `openai`) se importa perezoso solo al ejecutar
+# o probar modelos, para que el dashboard abra sin dependencias más allá de la
+# biblioteca estándar.
 
 CLAVES_ENV = [
     "LLM_API_KEY",
@@ -41,6 +45,12 @@ CLAVES_ENV = [
     "LITELLM_MASTER_KEY",
 ]
 CLAVES_SECRETAS = {"LLM_API_KEY", "LITELLM_MASTER_KEY"}
+# Modelos que se prueban en "Probar conexión": (clave de env, etiqueta).
+MODELOS_PROBABLES = [
+    ("MODELO_EMPRESA_BASE", "base"),
+    ("MODELO_EMPRESA_RAZONAMIENTO", "razonamiento"),
+    ("MODELO_EMPRESA_LIGERO", "ligero"),
+]
 
 
 # ---------------------------------------------------------------- .env
@@ -82,8 +92,24 @@ def escribir_env(nuevos: dict) -> None:
     os.replace(tmp, RUTA_ENV)
 
 
-def config_publica() -> dict:
+def aplicar_env() -> dict:
+    """Aplica el .env del dashboard sobre el entorno del proceso.
+
+    El archivo es la fuente de verdad de lo que se configuró en la pestaña
+    Configuración: lo que se guarda ahí es lo que se usa al ejecutar.
+    Las claves que el archivo no trae (p. ej. en Kaggle, donde los secretos
+    viven como variables de entorno) se dejan intactas.
+    """
     valores = leer_env()
+    for k, v in valores.items():
+        if k in CLAVES_ENV:
+            os.environ[k] = v
+    return valores
+
+
+def config_publica() -> dict:
+    aplicar_env()
+    valores = {k: os.environ.get(k, "") for k in CLAVES_ENV}
     pub = {}
     for k in CLAVES_ENV:
         v = valores.get(k, "")
@@ -96,6 +122,7 @@ def config_publica() -> dict:
 
 # ---------------------------------------------------------------- datos
 def info_agentes() -> list:
+    aplicar_env()
     datos = []
     for slug in modulo_agente.slugs():
         ficha_rel, modelo = modulo_agente.REGISTRO[slug]
@@ -116,7 +143,7 @@ def info_agentes() -> list:
     return datos
 
 
-def leer_auditoria(limite: int = 50) -> list:
+def leer_auditoria(limite: int = 50, agente: str = "") -> dict:
     from nucleo import auditoria
     eventos = []
     try:
@@ -130,10 +157,21 @@ def leer_auditoria(limite: int = 50) -> list:
                         continue
     except FileNotFoundError:
         pass
-    return eventos[-limite:][::-1]
+    total = len(eventos)
+    if agente:
+        eventos = [e for e in eventos if e.get("agente") == agente]
+    tokens = sum((e.get("tokens_entrada") or 0) + (e.get("tokens_salida") or 0)
+                 for e in eventos)
+    return {
+        "total": total,
+        "filtrados": len(eventos),
+        "tokens": tokens,
+        "eventos": eventos[-limite:][::-1],
+    }
 
 
 def estado_empresa() -> dict:
+    aplicar_env()
     etapas = []
     try:
         with open(os.path.join(RAIZ_REPO, "pipeline", "etapas.md"), encoding="utf-8") as f:
@@ -155,8 +193,62 @@ def estado_empresa() -> dict:
         "agentes": len(modulo_agente.slugs()),
         "etapas": etapas,
         "productos": productos,
-        "proxy_configurado": bool(leer_env().get("LLM_API_KEY")),
+        "proxy_configurado": bool(os.environ.get("LLM_API_KEY")),
     }
+
+
+def probar_modelos() -> dict:
+    """Prueba en vivo cada modelo configurado contra el proveedor.
+
+    Devuelve por modelo: ok True/False, latencia en ms o mensaje de error.
+    Detecta modelos muertos/retirados (p. ej. HTTP 410) antes de ejecutar.
+    """
+    aplicar_env()
+    try:
+        from nucleo import cliente as modulo_cliente
+    except ImportError:
+        raise RuntimeError(
+            "Falta el paquete 'openai': instalá dependencias con "
+            "`pip install -r runtime/requirements.txt`."
+        )
+    c = modulo_cliente.crear_cliente()
+    try:
+        publicados = [m.id for m in c.models.list(timeout=30)]
+    except Exception:  # noqa: BLE001 - no es fatal para la prueba
+        publicados = []
+    resultados = []
+    for clave, etiqueta in MODELOS_PROBABLES:
+        modelo = os.environ.get(clave, "")
+        if not modelo:
+            resultados.append({"clave": clave, "etiqueta": etiqueta, "modelo": "",
+                               "ok": False, "error": "no configurado"})
+            continue
+        t0 = time.monotonic()
+        try:
+            r = c.chat.completions.create(
+                model=modelo,
+                messages=[{"role": "user",
+                           "content": "Responde con una sola palabra: ok"}],
+                max_tokens=16,
+                temperature=0,
+                timeout=45,
+            )
+            texto = (r.choices[0].message.content or "").strip()
+            ms = int((time.monotonic() - t0) * 1000)
+            if texto:
+                resultados.append({"clave": clave, "etiqueta": etiqueta,
+                                   "modelo": modelo, "ok": True,
+                                   "latencia_ms": ms,
+                                   "en_catalogo": (modelo in publicados) if publicados else None})
+            else:
+                resultados.append({"clave": clave, "etiqueta": etiqueta,
+                                   "modelo": modelo, "ok": False,
+                                   "error": "el modelo respondió vacío"})
+        except Exception as e:  # noqa: BLE001 - se reporta en el resultado
+            resultados.append({"clave": clave, "etiqueta": etiqueta,
+                               "modelo": modelo, "ok": False,
+                               "error": str(e)[:220]})
+    return {"modelos_publicados": len(publicados), "resultados": resultados}
 
 
 # ---------------------------------------------------------------- servidor
@@ -189,6 +281,14 @@ class Manejador(BaseHTTPRequestHandler):
         except json.JSONDecodeError:
             return {}
 
+    @staticmethod
+    def _entero(qs, clave, defecto, minimo=1, maximo=200):
+        try:
+            v = int(qs.get(clave, [str(defecto)])[0])
+        except (ValueError, TypeError):
+            v = defecto
+        return max(minimo, min(maximo, v))
+
     def do_GET(self):  # noqa: N802
         ruta = urlparse(self.path)
         if ruta.path in ("/", "/index.html"):
@@ -197,8 +297,12 @@ class Manejador(BaseHTTPRequestHandler):
             self._json(info_agentes())
         elif ruta.path == "/api/auditoria":
             qs = parse_qs(ruta.query)
-            limite = int(qs.get("limite", ["50"])[0])
-            self._json(leer_auditoria(min(limite, 200)))
+            limite = self._entero(qs, "limite", 50)
+            agente = (qs.get("agente", [""])[0] or "").strip()
+            if agente and agente not in modulo_agente.slugs():
+                self._json({"ok": False, "error": "agente desconocido"}, 400)
+                return
+            self._json(leer_auditoria(limite, agente))
         elif ruta.path == "/api/config":
             self._json(config_publica())
         elif ruta.path == "/api/empresa":
@@ -215,9 +319,11 @@ class Manejador(BaseHTTPRequestHandler):
             if not slug or not tarea:
                 self._json({"ok": False, "error": "faltan slug o tarea"}, 400)
                 return
+            if slug not in modulo_agente.slugs():
+                self._json({"ok": False, "error": "agente desconocido"}, 400)
+                return
             try:
-                for k, v in leer_env().items():
-                    os.environ.setdefault(k, v)
+                aplicar_env()
                 try:
                     from nucleo import cliente as modulo_cliente
                 except ImportError:
@@ -226,8 +332,12 @@ class Manejador(BaseHTTPRequestHandler):
                         "`pip install -r runtime/requirements.txt`."
                     )
                 c = modulo_cliente.crear_cliente()
+                historial = cuerpo.get("historial", [])
+                if not isinstance(historial, list):
+                    historial = []
                 r = modulo_agente.ejecutar_agente(
-                    slug, tarea, c, forzar_modelo=cuerpo.get("modelo", ""))
+                    slug, tarea, c, forzar_modelo=cuerpo.get("modelo", ""),
+                    historial=historial)
                 self._json({"ok": True, "agente": r["agente"], "modelo": r["modelo"],
                             "texto": r["texto"],
                             "tokens_entrada": r["tokens_entrada"],
@@ -242,8 +352,7 @@ class Manejador(BaseHTTPRequestHandler):
                 self._json({"ok": False, "error": "falta tarea"}, 400)
                 return
             try:
-                for k, v in leer_env().items():
-                    os.environ.setdefault(k, v)
+                aplicar_env()
                 try:
                     from nucleo import cliente as modulo_cliente
                     from nucleo import delegacion as modulo_delegacion
@@ -254,6 +363,12 @@ class Manejador(BaseHTTPRequestHandler):
                     )
                 c = modulo_cliente.crear_cliente()
                 r = modulo_delegacion.orquestar(tarea, c)
+                self._json({"ok": True, **r})
+            except Exception as e:  # noqa: BLE001 - se reporta al dashboard
+                self._json({"ok": False, "error": str(e)})
+        elif ruta.path == "/api/probar":
+            try:
+                r = probar_modelos()
                 self._json({"ok": True, **r})
             except Exception as e:  # noqa: BLE001 - se reporta al dashboard
                 self._json({"ok": False, "error": str(e)})

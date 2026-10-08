@@ -1,4 +1,4 @@
-"""Registro y ejecución de los 25 agentes.
+"""Registro y ejecución de los 26 agentes.
 
 Cada agente se define por su ficha (el QUÉ) + su SKILL.md (el CÓMO).
 El prompt del sistema se compone de ambos archivos del repo.
@@ -8,6 +8,7 @@ import os
 # slug -> (ficha relativa a la raíz del repo, modelo del proxy)
 REGISTRO = {
     "gerente-general": ("agentes/direccion/gerente-general.md", "empresa-razonamiento"),
+    "explorador": ("agentes/direccion/explorador.md", "empresa-razonamiento"),
     "arquitecto": ("agentes/ingenieria/arquitecto.md", "empresa-razonamiento"),
     "constructor": ("agentes/ingenieria/constructor.md", "empresa-base"),
     "desarrollador-mobile": ("agentes/ingenieria/desarrollador-mobile.md", "empresa-base"),
@@ -131,13 +132,39 @@ def _resolver_modelo(modelo: str) -> str:
     return modelo
 
 
-def ejecutar_agente(slug: str, tarea: str, cliente, forzar_modelo: str = "") -> dict:
-    """Ejecuta un agente contra una tarea. Devuelve dict con respuesta y metadatos."""
+MAX_TURNOS_HISTORIAL = 20
+
+
+def _validar_historial(historial) -> list:
+    """Normaliza el historial de chat: [{"rol": "usuario"|"agente", "texto": str}]."""
+    if not historial:
+        return []
+    if not isinstance(historial, list):
+        raise ValueError("historial debe ser una lista de turnos")
+    limpio = []
+    for turno in historial[-MAX_TURNOS_HISTORIAL:]:
+        if not isinstance(turno, dict):
+            continue
+        rol = "usuario" if turno.get("rol") == "usuario" else "agente"
+        texto = str(turno.get("texto", ""))[:8000]
+        if texto:
+            limpio.append({"rol": rol, "texto": texto})
+    return limpio
+
+
+def ejecutar_agente(slug: str, tarea: str, cliente, forzar_modelo: str = "",
+                    historial: list = None) -> dict:
+    """Ejecuta un agente contra una tarea. Devuelve dict con respuesta y metadatos.
+
+    historial: turnos previos de chat para conversaciones multi-turno.
+    """
     from . import auditoria, cliente as modulo_cliente
 
     sistema = prompt_sistema(slug)
     modelo = _resolver_modelo(forzar_modelo or modelo_para(slug))
-    resultado = modulo_cliente.completar(cliente, modelo, sistema, tarea)
+    historial = _validar_historial(historial)
+    resultado = modulo_cliente.completar(cliente, modelo, sistema, tarea,
+                                         historial=historial)
     auditoria.registrar(
         agente=slug,
         modelo=modelo,

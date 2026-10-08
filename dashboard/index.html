@@ -6,7 +6,7 @@
 <title>Company OS — Panel de control</title>
 <style>
   :root { --fondo:#0f1115; --panel:#1a1e26; --borde:#2a3040; --texto:#e8eaf0;
-          --suave:#9aa3b5; --acento:#4f8cff; --ok:#3ecf8e; --err:#ff6b6b; }
+          --suave:#9aa3b5; --acento:#4f8cff; --ok:#3ecf8e; --err:#ff6b6b; --warn:#e8b93e; }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--fondo); color:var(--texto);
          font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
@@ -29,7 +29,7 @@
   .etiqueta { display:inline-block; font-size:11px; background:#242b3a; color:var(--suave);
               border-radius:20px; padding:3px 10px; margin-top:6px; }
   .panel { background:var(--panel); border:1px solid var(--borde); border-radius:10px; padding:20px; }
-  textarea, input[type=text], input[type=password] {
+  textarea, input[type=text], input[type=password], select {
     width:100%; background:#11141b; border:1px solid var(--borde); color:var(--texto);
     border-radius:8px; padding:10px 12px; font-size:14px; margin:6px 0 12px; }
   textarea { min-height:110px; resize:vertical; font-family:inherit; }
@@ -39,12 +39,16 @@
   button.accion:disabled { opacity:.5; cursor:wait; }
   button.secundario { background:#242b3a; color:var(--texto); border:1px solid var(--borde);
                      border-radius:8px; padding:8px 16px; cursor:pointer; }
+  button.secundario:disabled { opacity:.5; cursor:wait; }
   .respuesta { white-space:pre-wrap; background:#11141b; border:1px solid var(--borde);
                border-radius:8px; padding:14px; margin-top:14px; font-size:14px; line-height:1.55; }
   .error { color:var(--err); margin-top:10px; }
-  .evento { border-bottom:1px solid var(--borde); padding:12px 0; font-size:14px; }
+  .evento { border-bottom:1px solid var(--borde); padding:12px 0; font-size:14px; cursor:pointer; }
   .evento .meta { color:var(--suave); font-size:12px; margin-bottom:4px; }
   .evento .tarea { color:var(--suave); font-size:13px; margin:6px 0; }
+  .evento .completo { display:none; margin-top:8px; }
+  .evento.abierto .completo { display:block; }
+  .evento.abierto .resumen { display:none; }
   .etapas { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
   .etapa { background:var(--panel); border:1px solid var(--borde); border-radius:8px;
            padding:8px 14px; font-size:13px; }
@@ -61,6 +65,36 @@
   .delegacion.fallo { border-left:3px solid var(--err); }
   .delegacion .quien { font-weight:600; margin-bottom:4px; }
   .delegacion .tarea-del { color:var(--suave); margin-bottom:6px; }
+  .chat-mensajes { display:flex; flex-direction:column; gap:10px; max-height:52vh;
+                   overflow-y:auto; padding:6px 2px; margin:8px 0 12px; }
+  .burbuja { max-width:88%; padding:10px 14px; border-radius:14px; font-size:14px;
+             line-height:1.55; word-wrap:break-word; }
+  .burbuja p { margin:0 0 8px; } .burbuja p:last-child { margin-bottom:0; }
+  .burbuja h4 { margin:10px 0 6px; font-size:14px; }
+  .burbuja ul { margin:6px 0; padding-left:20px; }
+  .burbuja li { margin:3px 0; }
+  .burbuja pre { background:#0d1017; border:1px solid var(--borde); border-radius:8px;
+                 padding:10px 12px; overflow-x:auto; font-size:12.5px; }
+  .burbuja code { background:#0d1017; border-radius:4px; padding:1px 5px; font-size:12.5px; }
+  .burbuja pre code { background:none; padding:0; }
+  .burbuja table { border-collapse:collapse; margin:8px 0; font-size:13px; width:100%; }
+  .burbuja th, .burbuja td { border:1px solid var(--borde); padding:6px 10px; text-align:left; }
+  .burbuja th { background:#242b3a; }
+  .burbuja-usuario { align-self:flex-end; background:var(--acento); color:#fff;
+                     border-bottom-right-radius:4px; white-space:pre-wrap; }
+  .burbuja-agente { align-self:flex-start; background:#141821;
+                    border:1px solid var(--borde); border-bottom-left-radius:4px; }
+  .burbuja .hora { display:block; font-size:10px; opacity:.55; margin-top:6px; }
+  .escribiendo { align-self:flex-start; background:#141821; border:1px solid var(--borde);
+                 border-radius:14px; border-bottom-left-radius:4px; padding:12px 16px; }
+  .escribiendo span { display:inline-block; width:7px; height:7px; margin:0 2px;
+                      background:var(--suave); border-radius:50%; animation:parpadeo 1.2s infinite; }
+  .escribiendo span:nth-child(2) { animation-delay:.2s; }
+  .escribiendo span:nth-child(3) { animation-delay:.4s; }
+  @keyframes parpadeo { 0%,60%,100% { opacity:.25; } 30% { opacity:1; } }
+  .chat-entrada { display:flex; gap:8px; align-items:flex-end; }
+  .chat-entrada textarea { flex:1; min-height:44px; max-height:120px; margin:0; }
+  .chat-entrada button { white-space:nowrap; }
   .modal-fondo { position:fixed; inset:0; background:rgba(0,0,0,.6); display:none;
                  align-items:flex-start; justify-content:center; padding:40px 16px; z-index:10; }
   .modal-fondo.abierto { display:flex; }
@@ -70,6 +104,17 @@
   .cerrar { float:right; background:none; border:none; color:var(--suave);
             font-size:20px; cursor:pointer; }
   .ayuda { font-size:12px; color:var(--suave); margin-top:-8px; margin-bottom:12px; }
+  .buscador { max-width:340px; margin-bottom:16px; }
+  .fila { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+  .fila select { width:auto; margin:0; min-width:200px; }
+  .prueba { border:1px solid var(--borde); border-radius:8px; padding:10px 14px;
+            margin:8px 0; font-size:13px; background:#141821; }
+  .prueba.ok { border-left:3px solid var(--ok); }
+  .prueba.fallo { border-left:3px solid var(--err); }
+  .prueba .mod { font-family:monospace; font-size:12px; color:var(--suave);
+                 word-break:break-all; }
+  .totales { color:var(--suave); font-size:13px; margin:4px 0 12px; }
+  .hint { font-size:12px; color:var(--suave); margin-left:8px; }
 </style>
 </head>
 <body>
@@ -84,10 +129,18 @@
 </nav>
 <main>
   <section id="tab-agentes" class="tab activa">
+    <input type="text" id="buscar-agente" class="buscador"
+           placeholder="Buscar agente por nombre, área…" oninput="filtrarAgentes()">
     <div class="grilla" id="grilla-agentes"></div>
   </section>
   <section id="tab-auditoria" class="tab">
-    <p><button class="secundario" onclick="cargarAuditoria()">Actualizar</button></p>
+    <div class="fila">
+      <select id="filtro-agente" onchange="cargarAuditoria()">
+        <option value="">Todos los agentes</option>
+      </select>
+      <button class="secundario" onclick="cargarAuditoria()">Actualizar</button>
+    </div>
+    <div class="totales" id="totales-auditoria"></div>
     <div class="panel" id="lista-auditoria"></div>
   </section>
   <section id="tab-config" class="tab">
@@ -104,10 +157,15 @@
       <input type="text" id="cfg-MODELO_EMPRESA_LIGERO">
       <label>URL del proxy LiteLLM</label>
       <input type="text" id="cfg-LITELLM_BASE_URL">
-      <button class="accion" onclick="guardarConfig()">Guardar</button>
-      <span id="config-msg" style="margin-left:12px"></span>
-      <p class="ayuda">Formato de modelo: <code>proveedor/modelo</code> (ej. <code>openai/gpt-4o-mini</code>,
-      <code>anthropic/claude-sonnet-4-20250514</code>). La key nunca sale de tu máquina.</p>
+      <div class="fila">
+        <button class="accion" id="btn-guardar" onclick="guardarConfig()">Guardar</button>
+        <button class="secundario" id="btn-probar" onclick="probarModelos()">Probar conexión</button>
+        <span id="config-msg" style="margin-left:12px"></span>
+      </div>
+      <div id="resultado-prueba" style="margin-top:8px"></div>
+      <p class="ayuda">Formato de modelo: <code>proveedor/modelo</code> (ej. <code>openai/gpt-4o-mini</code>).
+      La key nunca sale de tu máquina. "Probar conexión" verifica en vivo que cada
+      modelo configurado responde (detecta modelos retirados antes de ejecutar).</p>
     </div>
   </section>
   <section id="tab-empresa" class="tab">
@@ -124,20 +182,29 @@
     <button class="cerrar" onclick="cerrarModal()">✕</button>
     <h2 id="modal-titulo"></h2>
     <p id="modal-sub" style="color:var(--suave);font-size:13px"></p>
-    <label>Tarea para el agente</label>
-    <textarea id="modal-tarea" placeholder="Describí la tarea en lenguaje natural…"></textarea>
-    <button class="accion" id="btn-ejecutar" onclick="ejecutarAgente()">Ejecutar</button>
-    <button class="secundario" id="btn-orquestar" onclick="orquestarGG()"
-            style="display:none;margin-left:8px" title="El Gerente General delega a especialistas y consolida">Orquestar</button>
+    <div class="chat-mensajes" id="chat-mensajes"></div>
+    <div class="chat-entrada">
+      <textarea id="chat-input" rows="2"
+                placeholder="Escribile al agente… (Enter para enviar, Shift+Enter para salto de línea)"></textarea>
+      <button class="accion" id="btn-enviar" onclick="enviarMensaje()">Enviar</button>
+      <button class="secundario" id="btn-orquestar" onclick="orquestarGG()"
+              style="display:none" title="El Gerente General delega a especialistas y consolida">Orquestar</button>
+      <button class="secundario" id="btn-cancelar" onclick="cancelarEjecucion()"
+              style="display:none">Cancelar</button>
+    </div>
     <div class="error" id="modal-error"></div>
-    <div class="traza" id="modal-traza" style="display:none"></div>
-    <div class="respuesta" id="modal-respuesta" style="display:none"></div>
   </div>
 </div>
 
 <script>
 const $ = id => document.getElementById(id);
 let agenteActual = null;
+let controlador = null;
+
+function esc(s) {
+  return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                        .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
 
 document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
   document.querySelectorAll("nav button").forEach(x => x.classList.remove("activa"));
@@ -150,111 +217,267 @@ document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
 });
 
 async function api(ruta, opts) {
-  const r = await fetch(ruta, opts);
+  const ctrl = opts && opts.signal ? {} : {};
+  const r = await fetch(ruta, { ...ctrl, ...opts });
   return r.json();
 }
 
 async function cargarAgentes() {
   const agentes = await api("/api/agentes");
-  $("grilla-agentes").innerHTML = agentes.map(a => `
-    <div class="tarjeta" onclick='abrirModal(${JSON.stringify(a.slug)})'>
-      <h3>${a.nombre}</h3>
-      <p>${a.area || ""}</p>
-      <span class="etiqueta">${a.modelo}</span>
-    </div>`).join("");
-  window._agentes = Object.fromEntries(agentes.map(a => [a.slug, a]));
+  window._agentes = agentes;
+  const sel = $("filtro-agente");
+  const actual = sel.value;
+  sel.innerHTML = '<option value="">Todos los agentes</option>' +
+    agentes.map(a => `<option value="${esc(a.slug)}">${esc(a.nombre)}</option>`).join("");
+  sel.value = actual;
+  filtrarAgentes();
 }
+function filtrarAgentes() {
+  const q = ($("buscar-agente").value || "").toLowerCase();
+  const lista = (window._agentes || []).filter(a =>
+    !q || a.nombre.toLowerCase().includes(q) || (a.area || "").toLowerCase().includes(q)
+        || a.slug.toLowerCase().includes(q));
+  const grilla = $("grilla-agentes");
+  grilla.innerHTML = lista.map(a => {
+    const mod = a.modelo_efectivo && a.modelo_efectivo !== a.modelo
+      ? `${esc(a.modelo)} → ${esc(a.modelo_efectivo)}` : esc(a.modelo);
+    return `
+    <div class="tarjeta" data-slug="${esc(a.slug)}">
+      <h3>${esc(a.nombre)}</h3>
+      <p>${esc(a.area || "")}</p>
+      <span class="etiqueta">${mod}</span>
+    </div>`;
+  }).join("") || '<p style="color:var(--suave)">Sin coincidencias.</p>';
+  grilla.querySelectorAll(".tarjeta").forEach(t =>
+    t.onclick = () => abrirModal(t.dataset.slug));
+}
+let historialChat = [];
+
 function abrirModal(slug) {
-  const a = window._agentes[slug];
+  const a = (window._agentes || []).find(x => x.slug === slug);
+  if (!a) return;
   agenteActual = slug;
   $("modal-titulo").textContent = a.nombre;
   const mod = a.modelo_efectivo && a.modelo_efectivo !== a.modelo
     ? `${a.modelo} → ${a.modelo_efectivo}` : a.modelo;
   $("modal-sub").textContent = (a.area ? a.area + " · " : "") + mod;
-  $("modal-tarea").value = "";
   $("modal-error").textContent = "";
-  $("modal-respuesta").style.display = "none";
-  $("modal-traza").style.display = "none";
-  $("modal-traza").innerHTML = "";
+  $("chat-mensajes").innerHTML = "";
+  historialChat = [];
+  $("chat-input").value = "";
   $("btn-orquestar").style.display = slug === "gerente-general" ? "" : "none";
   $("modal-fondo").classList.add("abierto");
+  $("chat-input").focus();
 }
-function cerrarModal() { $("modal-fondo").classList.remove("abierto"); }
+function cerrarModal() {
+  cancelarEjecucion();
+  $("modal-fondo").classList.remove("abierto");
+}
 $("modal-fondo").addEventListener("click", e => { if (e.target.id === "modal-fondo") cerrarModal(); });
+$("chat-input").addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+    e.preventDefault();
+    enviarMensaje();
+  }
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && $("modal-fondo").classList.contains("abierto")) cerrarModal();
+});
 
-async function ejecutarAgente() {
-  const tarea = $("modal-tarea").value.trim();
-  if (!tarea) return;
-  const btn = $("btn-ejecutar");
-  btn.disabled = true; btn.textContent = "Ejecutando…";
+function estadoEjecutando(ejecutando) {
+  $("btn-enviar").disabled = ejecutando;
+  $("btn-enviar").textContent = ejecutando ? "Enviando…" : "Enviar";
+  $("btn-orquestar").disabled = ejecutando;
+  $("btn-cancelar").style.display = ejecutando ? "" : "none";
+}
+function cancelarEjecucion() {
+  if (controlador) { controlador.abort(); controlador = null; }
+  estadoEjecutando(false);
+}
+
+// Mini-render de markdown para las respuestas del agente (seguro: escapa HTML).
+function md(src) {
+  let html = esc(src);
+  const guardados = [];
+  const guardar = h => { guardados.push(h); return `\u0000${guardados.length - 1}\u0000`; };
+  html = html.replace(/```([\s\S]*?)```/g, (m, c) =>
+    guardar(`<pre><code>${c.replace(/^\n/, "")}</code></pre>`));
+  html = html.replace(/`([^`\n]+)`/g, (m, c) => guardar(`<code>${c}</code>`));
+  const inline = s => s
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/(^|[\s(>])\*([^*\n]+)\*/g, "$1<em>$2</em>");
+  const esSep = l => /-/.test(l) && /^\|?[\s:|-]+\|?$/.test(l);
+  const celdas = l => l.trim().replace(/^\||\|$/g, "").split("|").map(c => inline(c.trim()));
+  const lineas = html.split("\n");
+  let out = "", lista = false, tabla = [], parrafo = [];
+  const cerrarParrafo = () => {
+    if (parrafo.length) { out += `<p>${inline(parrafo.join("<br>"))}</p>`; parrafo = []; }
+  };
+  const cerrarLista = () => { if (lista) { out += "</ul>"; lista = false; } };
+  const cerrarTabla = () => {
+    if (tabla.length) {
+      const [cab, ...cuerpo] = tabla;
+      out += "<table><thead><tr>" + cab.map(c => `<th>${c}</th>`).join("") +
+             "</tr></thead><tbody>" +
+             cuerpo.map(f => `<tr>${f.map(c => `<td>${c}</td>`).join("")}</tr>`).join("") +
+             "</tbody></table>";
+      tabla = [];
+    }
+  };
+  for (const ln of lineas) {
+    if (/\u0000\d+\u0000/.test(ln)) {
+      cerrarParrafo(); cerrarLista(); cerrarTabla(); out += ln; continue;
+    }
+    const t = ln.trim();
+    const mItem = /^[-*]\s+(.+)/.exec(t);
+    const mTit = /^(#{1,4})\s+(.+)/.exec(t);
+    if (/^\|/.test(t) && /\|$/.test(t)) {
+      cerrarParrafo(); cerrarLista();
+      if (!esSep(t)) tabla.push(celdas(t));
+      continue;
+    }
+    cerrarTabla();
+    if (mTit) { cerrarParrafo(); cerrarLista(); out += `<h4>${inline(mTit[2])}</h4>`; continue; }
+    if (mItem) {
+      cerrarParrafo();
+      if (!lista) { out += "<ul>"; lista = true; }
+      out += `<li>${inline(mItem[1])}</li>`; continue;
+    }
+    cerrarLista();
+    if (!t) { cerrarParrafo(); continue; }
+    parrafo.push(t);
+  }
+  cerrarParrafo(); cerrarLista(); cerrarTabla();
+  return out.replace(/\u0000(\d+)\u0000/g, (m, i) => guardados[+i]);
+}
+
+function horaCorta() {
+  return new Date().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+}
+
+function agregarBurbuja(rol, contenidoHtml) {
+  const caja = $("chat-mensajes");
+  const d = document.createElement("div");
+  d.className = "burbuja " + (rol === "usuario" ? "burbuja-usuario" : "burbuja-agente");
+  d.innerHTML = contenidoHtml + `<span class="hora">${horaCorta()}</span>`;
+  caja.appendChild(d);
+  caja.scrollTop = caja.scrollHeight;
+  return d;
+}
+
+function mostrarEscribiendo() {
+  const d = document.createElement("div");
+  d.className = "escribiendo";
+  d.id = "escribiendo";
+  d.innerHTML = "<span></span><span></span><span></span>";
+  $("chat-mensajes").appendChild(d);
+  $("chat-mensajes").scrollTop = $("chat-mensajes").scrollHeight;
+}
+function ocultarEscribiendo() {
+  const d = $("escribiendo");
+  if (d) d.remove();
+}
+
+async function enviarMensaje() {
+  const input = $("chat-input");
+  const texto = input.value.trim();
+  if (!texto || controlador) return;
+  input.value = "";
+  agregarBurbuja("usuario", esc(texto));
+  mostrarEscribiendo();
+  controlador = new AbortController();
+  estadoEjecutando(true);
   $("modal-error").textContent = "";
   try {
-    const r = await api("/api/ejecutar", { method: "POST",
+    const r = await fetch("/api/ejecutar", { method: "POST", signal: controlador.signal,
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ slug: agenteActual, tarea }) });
+      body: JSON.stringify({ slug: agenteActual, tarea: texto, historial: historialChat })
+    }).then(x => x.json());
+    ocultarEscribiendo();
     if (r.ok) {
-      const el = $("modal-respuesta");
-      el.style.display = "block";
-      el.textContent = r.texto +
-        `\n\n— ${r.tokens_entrada ?? "?"} tokens entrada · ${r.tokens_salida ?? "?"} salida`;
+      historialChat.push({ rol: "usuario", texto });
+      historialChat.push({ rol: "agente", texto: r.texto });
+      agregarBurbuja("agente", md(r.texto));
     } else {
       $("modal-error").textContent = "Error: " + (r.error || "desconocido");
     }
   } catch (e) {
-    $("modal-error").textContent = "Error de conexión con el dashboard.";
+    ocultarEscribiendo();
+    $("modal-error").textContent = e.name === "AbortError"
+      ? "Envío cancelado." : "Error de conexión con el dashboard.";
   }
-  btn.disabled = false; btn.textContent = "Ejecutar";
+  controlador = null;
+  estadoEjecutando(false);
+  $("chat-input").focus();
 }
 
 async function orquestarGG() {
-  const tarea = $("modal-tarea").value.trim();
-  if (!tarea) return;
-  const btn = $("btn-orquestar");
-  btn.disabled = true; btn.textContent = "Orquestando…";
+  const input = $("chat-input");
+  const texto = input.value.trim();
+  if (!texto || controlador) return;
+  input.value = "";
+  agregarBurbuja("usuario", esc(texto));
+  mostrarEscribiendo();
+  controlador = new AbortController();
+  estadoEjecutando(true);
+  $("btn-orquestar").textContent = "Orquestando…";
   $("modal-error").textContent = "";
-  $("modal-respuesta").style.display = "none";
-  const traza = $("modal-traza");
-  traza.style.display = "none"; traza.innerHTML = "";
   try {
-    const r = await api("/api/orquestar", { method: "POST",
+    const r = await fetch("/api/orquestar", { method: "POST", signal: controlador.signal,
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ tarea }) });
+      body: JSON.stringify({ tarea: texto }) }).then(x => x.json());
+    ocultarEscribiendo();
     if (r.ok) {
+      historialChat.push({ rol: "usuario", texto });
       if (r.delegaciones && r.delegaciones.length) {
-        traza.style.display = "block";
-        traza.innerHTML = "<b>Delegaciones del Gerente General</b>" + r.delegaciones.map(d => `
+        const trazaHtml = "<b>Delegaciones del Gerente General</b>" + r.delegaciones.map(d => `
           <div class="delegacion ${d.ok ? "ok" : "fallo"}">
-            <div class="quien">${d.ok ? "✓" : "✕"} ${d.agente}</div>
+            <div class="quien">${d.ok ? "✓" : "✕"} ${esc(d.agente)}</div>
             <div class="tarea-del">${esc(d.tarea || "")}</div>
-            <div>${esc(d.ok ? (d.texto || "").slice(0, 600) : ("Error: " + (d.error || "")))}</div>
+            <div>${md((d.ok ? (d.texto || "") : ("Error: " + (d.error || ""))).slice(0, 600))}</div>
           </div>`).join("");
+        agregarBurbuja("agente", trazaHtml);
       }
-      const el = $("modal-respuesta");
-      el.style.display = "block";
-      el.textContent = (r.delega ? "" : "(sin delegación — respuesta directa)\n\n") + r.texto;
+      const final = (r.delega ? "" : "(sin delegación — respuesta directa)\n\n") + r.texto;
+      historialChat.push({ rol: "agente", texto: final });
+      agregarBurbuja("agente", md(final));
     } else {
       $("modal-error").textContent = "Error: " + (r.error || "desconocido");
     }
   } catch (e) {
-    $("modal-error").textContent = "Error de conexión con el dashboard.";
+    ocultarEscribiendo();
+    $("modal-error").textContent = e.name === "AbortError"
+      ? "Orquestación cancelada." : "Error de conexión con el dashboard.";
   }
-  btn.disabled = false; btn.textContent = "Orquestar";
-}
-
-function esc(s) {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  controlador = null;
+  $("btn-orquestar").textContent = "Orquestar";
+  estadoEjecutando(false);
+  $("chat-input").focus();
 }
 
 async function cargarAuditoria() {
-  const eventos = await api("/api/auditoria?limite=50");
-  $("lista-auditoria").innerHTML = eventos.length ? eventos.map(e => `
-    <div class="evento">
-      <div class="meta">${e.marca_tiempo || ""} · <b>${e.agente}</b> · ${e.modelo || ""} ·
-        ${e.tokens_entrada ?? "?"}+${e.tokens_salida ?? "?"} tokens</div>
-      <div class="tarea">${(e.tarea || "").slice(0, 160)}</div>
-      <div>${(e.respuesta || "").slice(0, 400)}</div>
+  const agente = $("filtro-agente").value || "";
+  const d = await api("/api/auditoria?limite=50" + (agente ? "&agente=" + encodeURIComponent(agente) : ""));
+  $("totales-auditoria").textContent =
+    `${d.filtrados} de ${d.total} ejecuciones · ${d.tokens.toLocaleString("es-AR")} tokens en total` +
+    (agente ? ` · filtrado: ${agente}` : "") + " · clic en un evento para verlo completo";
+  const lista = $("lista-auditoria");
+  lista.innerHTML = d.eventos.length ? d.eventos.map((e, i) => `
+    <div class="evento" data-i="${i}">
+      <div class="meta">${esc(e.marca_tiempo || "")} · <b>${esc(e.agente)}</b> · ${esc(e.modelo || "")} ·
+        ${(e.tokens_entrada ?? "?")}+${(e.tokens_salida ?? "?")} tokens</div>
+      <div class="resumen">
+        <div class="tarea">${esc((e.tarea || "").slice(0, 160))}</div>
+        <div>${esc((e.respuesta || "").slice(0, 400))}</div>
+      </div>
+      <div class="completo">
+        <div class="tarea"><b>Tarea completa:</b><br>${esc(e.tarea || "")}</div>
+        <div style="white-space:pre-wrap;margin-top:8px"><b>Respuesta completa:</b><br>${esc(e.respuesta || "")}</div>
+      </div>
     </div>`).join("")
     : "<p style='color:var(--suave)'>Todavía no hay ejecuciones registradas.</p>";
+  lista.querySelectorAll(".evento").forEach(el =>
+    el.onclick = () => el.classList.toggle("abierto"));
 }
 
 async function cargarConfig() {
@@ -271,15 +494,50 @@ async function cargarConfig() {
 }
 
 async function guardarConfig() {
+  const btn = $("btn-guardar");
+  btn.disabled = true;
   const cuerpo = {};
   for (const k of ["LLM_API_KEY", "MODELO_EMPRESA_BASE", "MODELO_EMPRESA_RAZONAMIENTO", "MODELO_EMPRESA_LIGERO", "LITELLM_BASE_URL"])
     cuerpo[k] = $("cfg-" + k).value;
-  const r = await api("/api/config", { method: "POST",
-    headers: {"Content-Type": "application/json"}, body: JSON.stringify(cuerpo) });
-  $("config-msg").textContent = r.ok ? "✓ Guardado" : "Error al guardar";
-  $("config-msg").style.color = r.ok ? "var(--ok)" : "var(--err)";
-  setTimeout(() => $("config-msg").textContent = "", 3000);
+  try {
+    const r = await api("/api/config", { method: "POST",
+      headers: {"Content-Type": "application/json"}, body: JSON.stringify(cuerpo) });
+    $("config-msg").textContent = r.ok ? "✓ Guardado — ya rige para próximas ejecuciones" : "Error al guardar";
+    $("config-msg").style.color = r.ok ? "var(--ok)" : "var(--err)";
+    if (r.ok) cargarAgentes();
+  } catch (e) {
+    $("config-msg").textContent = "Error de conexión";
+    $("config-msg").style.color = "var(--err)";
+  }
+  setTimeout(() => $("config-msg").textContent = "", 4000);
+  btn.disabled = false;
   cargarConfig();
+}
+
+async function probarModelos() {
+  const btn = $("btn-probar");
+  btn.disabled = true; btn.textContent = "Probando…";
+  const box = $("resultado-prueba");
+  box.innerHTML = "";
+  try {
+    const r = await api("/api/probar", { method: "POST" });
+    if (r.ok) {
+      box.innerHTML = (r.modelos_publicados
+        ? `<p class="ayuda">El proveedor publica ${r.modelos_publicados} modelos hoy.</p>` : "") +
+        r.resultados.map(m => `
+        <div class="prueba ${m.ok ? "ok" : "fallo"}">
+          <b>${m.ok ? "✓" : "✕"} ${esc(m.etiqueta)}</b>
+          <div class="mod">${esc(m.modelo || "(sin configurar)")}</div>
+          <div>${m.ok ? `${m.latencia_ms} ms` + (m.en_catalogo === false ? " · ⚠ no figura en el catálogo de hoy" : "")
+                      : "Error: " + esc(m.error || "desconocido")}</div>
+        </div>`).join("");
+    } else {
+      box.innerHTML = `<p class="error">Error: ${esc(r.error || "desconocido")}</p>`;
+    }
+  } catch (e) {
+    box.innerHTML = '<p class="error">Error de conexión con el dashboard.</p>';
+  }
+  btn.disabled = false; btn.textContent = "Probar conexión";
 }
 
 async function cargarEmpresa() {
@@ -289,9 +547,9 @@ async function cargarEmpresa() {
     <div class="stat"><b>${e.productos.length}</b><span>productos en portfolio</span></div>
     <div class="stat"><b>${e.proxy_configurado ? "✓" : "✕"}</b><span>proveedor conectado</span></div>`;
   $("etapas").innerHTML = e.etapas.map(t =>
-    `<div class="etapa"><b>${t.n}</b>${t.nombre}</div>`).join("");
+    `<div class="etapa"><b>${esc(String(t.n))}</b>${esc(t.nombre)}</div>`).join("");
   $("productos").innerHTML = e.productos.length
-    ? e.productos.map(p => `<div class="etapa">${p}</div>`).join("")
+    ? e.productos.map(p => `<div class="etapa">${esc(p)}</div>`).join("")
     : "<p style='color:var(--suave)'>Portfolio vacío: los productos entran por el pipeline.</p>";
 }
 

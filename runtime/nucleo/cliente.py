@@ -29,14 +29,23 @@ def crear_cliente() -> OpenAI:
 
 
 def completar(cliente: OpenAI, modelo: str, system: str, tarea: str,
-             temperature: float = 0.2) -> dict:
-    """Una pasada de chat contra el proxy. Devuelve texto + uso de tokens."""
+             temperature: float = 0.2, historial: list = None) -> dict:
+    """Una pasada de chat contra el proxy. Devuelve texto + uso de tokens.
+
+    historial: turnos previos [{"rol": "usuario"|"agente", "texto": str}] que se
+    intercalan entre el system prompt y la tarea actual (chat multi-turno).
+    """
+    mensajes = [{"role": "system", "content": system}]
+    for turno in historial or []:
+        texto = str(turno.get("texto", ""))[:8000]
+        if not texto:
+            continue
+        rol = "user" if turno.get("rol") == "usuario" else "assistant"
+        mensajes.append({"role": rol, "content": texto})
+    mensajes.append({"role": "user", "content": tarea})
     resp = cliente.chat.completions.create(
         model=modelo,
-        messages=[
-            {"role": "system", "content": system},
-            {"role": "user", "content": tarea},
-        ],
+        messages=mensajes,
         temperature=temperature,
     )
     eleccion = resp.choices[0].message.content or ""
