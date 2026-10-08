@@ -121,8 +121,50 @@ def config_publica() -> dict:
 
 
 # ---------------------------------------------------------------- datos
+def _mision_ficha(lineas: list) -> str:
+    """Extrae el texto de '## Misión' de la ficha (2 líneas, sin el header)."""
+    texto = []
+    dentro = False
+    for ln in lineas:
+        if re.match(r"##\s+Misión", ln):
+            dentro = True
+            continue
+        if dentro:
+            if ln.startswith("##"):
+                break
+            if ln.strip():
+                texto.append(ln.strip())
+            if len(texto) >= 2:
+                break
+    return " ".join(texto)[:220]
+
+
+def _ultima_actividad() -> dict:
+    """slug → marca_tiempo ISO de su ejecución más reciente (del audit log)."""
+    from nucleo import auditoria
+    ult = {}
+    try:
+        with open(auditoria.ARCHIVO, encoding="utf-8") as f:
+            for linea in f:
+                linea = linea.strip()
+                if not linea:
+                    continue
+                try:
+                    e = json.loads(linea)
+                except json.JSONDecodeError:
+                    continue
+                slug = e.get("agente", "")
+                ts = e.get("marca_tiempo", "")
+                if slug and ts and ts > ult.get(slug, ""):
+                    ult[slug] = ts
+    except FileNotFoundError:
+        pass
+    return ult
+
+
 def info_agentes() -> list:
     aplicar_env()
+    ult = _ultima_actividad()
     datos = []
     for slug in modulo_agente.slugs():
         ficha_rel, modelo = modulo_agente.REGISTRO[slug]
@@ -136,10 +178,13 @@ def info_agentes() -> list:
                 if m:
                     area = m.group(1).strip()
                     break
+            resumen = _mision_ficha(lineas)
         except OSError:
-            nombre, area = slug, ""
+            nombre, area, resumen = slug, "", ""
         datos.append({"slug": slug, "nombre": nombre, "area": area, "modelo": modelo,
-                      "modelo_efectivo": modulo_agente._resolver_modelo(modelo)})
+                      "modelo_efectivo": modulo_agente._resolver_modelo(modelo),
+                      "resumen": resumen,
+                      "ultima_actividad": ult.get(slug, "")})
     return datos
 
 
