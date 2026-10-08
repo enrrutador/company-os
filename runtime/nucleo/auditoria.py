@@ -15,7 +15,9 @@ ARCHIVO = os.path.join(DIR_REGISTRO, "auditoria.jsonl")
 
 
 def registrar(agente: str, modelo: str, tarea: str, respuesta: str,
-              tokens_entrada=None, tokens_salida=None) -> None:
+              tokens_entrada=None, tokens_salida=None, **extras) -> None:
+    """Registra un evento. extras admite campos nuevos (herramienta, riesgo,
+    decision_politica, tenant_id, execution_id, ...) sin romper lectores viejos."""
     os.makedirs(DIR_REGISTRO, exist_ok=True)
     evento = {
         "marca_tiempo": datetime.now(timezone.utc).isoformat(),
@@ -26,5 +28,9 @@ def registrar(agente: str, modelo: str, tarea: str, respuesta: str,
         "tokens_entrada": tokens_entrada,
         "tokens_salida": tokens_salida,
     }
+    for k, v in extras.items():
+        if v is None or v == "":
+            continue
+        evento[k] = v() if callable(v) else v
     with open(ARCHIVO, "a", encoding="utf-8") as f:
         f.write(json.dumps(evento, ensure_ascii=False) + "\n")

@@ -186,18 +186,56 @@ def _validar_historial(historial) -> list:
 
 
 def ejecutar_agente(slug: str, tarea: str, cliente, forzar_modelo: str = "",
-                    historial: list = None) -> dict:
+                    historial: list = None, herramientas: list = None,
+                    gateway=None, ctx=None) -> dict:
     """Ejecuta un agente contra una tarea. Devuelve dict con respuesta y metadatos.
 
     historial: turnos previos de chat para conversaciones multi-turno.
+    herramientas: nombres de herramientas habilitadas para este agente en esta
+        ejecución (mínimo privilegio: si es None, el agente no usa herramientas
+        y el comportamiento es el de siempre).
+    gateway: GatewayHerramientas (se crea uno por defecto si hay herramientas).
+    ctx: ContextoEjecucion (se crea uno por defecto con el agent_id).
     """
     from . import auditoria, cliente as modulo_cliente
 
     sistema = prompt_sistema(slug)
     modelo = _resolver_modelo(forzar_modelo or modelo_para(slug))
     historial = _validar_historial(historial)
-    resultado = modulo_cliente.completar(cliente, modelo, sistema, tarea,
-                                         historial=historial)
+
+    llamadas = []
+    if herramientas:
+        from herramientas import (
+            ContextoEjecucion, GatewayHerramientas, REGISTRO_GLOBAL,
+        )
+        from herramientas import archivos as herramientas_archivos
+
+        if not REGISTRO_GLOBAL.nombres():
+            herramientas_archivos.registrar_herramientas(REGISTRO_GLOBAL)
+        ctx = ctx or ContextoEjecucion(agent_id=slug)
+        gateway = gateway or GatewayHerramientas(registro=REGISTRO_GLOBAL,
+                                                 auditoria=auditoria)
+        gateway.permitir(slug, herramientas)
+        sistema += ("\n\nHERRAMIENTAS DISPONIBLES: podés usar estas herramientas "
+                    "cuando te sirvan para la tarea: "
+                    + ", ".join(herramientas)
+                    + ". Usalas vía tool calling; si una requiere aprobación, "
+                      "el sistema te lo va a informar y debés comunicarlo.")
+        schemas = REGISTRO_GLOBAL.esquemas_openai(herramientas)
+
+        def _ejecutar_tool(nombre, args):
+            r = gateway.ejecutar(ctx, nombre, args)
+            if r.ok:
+                return r.datos if isinstance(r.datos, str) else str(r.datos)
+            return f"[no ejecutada: {r.codigo}] {r.error}"
+
+        resultado = modulo_cliente.completar_con_herramientas(
+            cliente, modelo, sistema, tarea, schemas, _ejecutar_tool,
+            historial=historial)
+        llamadas = resultado.get("llamadas_herramientas", [])
+    else:
+        resultado = modulo_cliente.completar(cliente, modelo, sistema, tarea,
+                                             historial=historial)
     auditoria.registrar(
         agente=slug,
         modelo=modelo,
@@ -205,5 +243,9 @@ def ejecutar_agente(slug: str, tarea: str, cliente, forzar_modelo: str = "",
         respuesta=resultado["texto"],
         tokens_entrada=resultado["tokens_entrada"],
         tokens_salida=resultado["tokens_salida"],
+        llamadas_herramientas=llamadas or None,
+        tenant_id=getattr(ctx, "tenant_id", None),
+        execution_id=getattr(ctx, "execution_id", None),
     )
-    return {"agente": slug, "modelo": modelo, **resultado}
+    return {"agente": slug, "modelo": modelo,
+            "llamadas_herramientas": llamadas, **resultado}
