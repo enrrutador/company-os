@@ -32,7 +32,7 @@
   --shadow: 0 12px 32px rgba(0,0,0,.45);
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; }
+html, body { height: 100%; overflow-x: hidden; overflow-x: clip; }
 body {
   margin: 0; background: var(--bg); color: var(--text); font-family: var(--font);
   font-size: 15px; line-height: 1.5;
@@ -93,6 +93,8 @@ body {
 }
 .topbar h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
 .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.prov-dot { display: none; width: 9px; height: 9px; border-radius: 50%; background: var(--text3); flex-shrink: 0; }
+.prov-dot.on { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
 .search {
   display: flex; align-items: center; gap: 8px; background: var(--surface);
   border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; min-width: 220px;
@@ -142,9 +144,7 @@ body {
   font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;
 }
 .activity { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text3); white-space: nowrap; }
-.activity .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); }
-.activity.recent { color: var(--ok); }
-.activity.recent .dot { background: var(--ok); box-shadow: 0 0 6px var(--ok); }
+.activity .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); flex-shrink: 0; }
 
 /* ---------- Generic cards / forms ---------- */
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 22px; }
@@ -239,15 +239,21 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); }
 
 /* ---------- Chat drawer ---------- */
 .drawer-fondo {
-  position: fixed; inset: 0; z-index: 50; background: rgba(3,4,7,.6); backdrop-filter: blur(3px);
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 50;
+  background: rgba(3,4,7,.6); backdrop-filter: blur(3px);
   opacity: 0; pointer-events: none; transition: opacity .22s;
 }
 .drawer-fondo.abierto { opacity: 1; pointer-events: auto; }
 .drawer {
-  position: absolute; top: 0; right: 0; bottom: 0; width: min(480px, 100%);
+  position: fixed; top: 0; right: 0; bottom: 0;
+  width: 100%; max-width: 480px;
   background: var(--bg2); border-left: 1px solid var(--border2);
-  display: flex; flex-direction: column; transform: translateX(102%);
-  transition: transform .28s cubic-bezier(.32,.72,.24,1); box-shadow: var(--shadow);
+  display: flex; flex-direction: column;
+  transform: translateX(105%);
+  transition: transform .28s cubic-bezier(.32,.72,.24,1);
+  box-shadow: var(--shadow);
+  overflow-x: hidden; overflow-x: clip;
+  overscroll-behavior: contain;
 }
 .drawer-fondo.abierto .drawer { transform: none; }
 .drawer-head { display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--border); }
@@ -255,8 +261,8 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); }
 .drawer-titles { flex: 1; min-width: 0; }
 .drawer-titles b { display: block; font-size: 15px; letter-spacing: -.01em; }
 .drawer-titles span { font-size: 12px; color: var(--text3); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.chat-mensajes { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
-.burbuja { max-width: 88%; padding: 12px 15px; border-radius: 16px; font-size: 14px; line-height: 1.6; word-wrap: break-word; animation: fadeUp .2s ease; }
+.chat-mensajes { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 18px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.burbuja { max-width: 88%; min-width: 0; padding: 12px 15px; border-radius: 16px; font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; word-wrap: break-word; animation: fadeUp .2s ease; }
 .burbuja p { margin: 0 0 8px; } .burbuja p:last-child { margin-bottom: 0; }
 .burbuja h4 { margin: 10px 0 6px; font-size: 14px; }
 .burbuja ul, .burbuja ol { margin: 6px 0; padding-left: 20px; }
@@ -264,8 +270,8 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); }
 .burbuja pre { background: #05070b; border: 1px solid var(--border); border-radius: 10px; padding: 12px; overflow-x: auto; font-size: 12.5px; font-family: var(--mono); }
 .burbuja code { background: rgba(255,255,255,.07); border-radius: 5px; padding: 1px 6px; font-size: 12.5px; font-family: var(--mono); }
 .burbuja pre code { background: none; padding: 0; }
-.burbuja table { border-collapse: collapse; margin: 8px 0; font-size: 13px; width: 100%; }
-.burbuja th, .burbuja td { border: 1px solid var(--border2); padding: 7px 10px; text-align: left; }
+.burbuja table { border-collapse: collapse; margin: 8px 0; font-size: 13px; width: 100%; table-layout: fixed; }
+.burbuja th, .burbuja td { border: 1px solid var(--border2); padding: 7px 10px; text-align: left; overflow-wrap: anywhere; }
 .burbuja th { background: var(--surface3); font-weight: 650; }
 .burbuja-usuario { align-self: flex-end; background: linear-gradient(135deg, #4a7dff, #6a5cff); color: #fff; border-bottom-right-radius: 5px; white-space: pre-wrap; box-shadow: 0 4px 14px rgba(91,140,255,.25); }
 .burbuja-agente { align-self: flex-start; background: var(--surface2); border: 1px solid var(--border); border-bottom-left-radius: 5px; }
@@ -301,6 +307,14 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 900px) {
+  .stepper { flex-direction: column; align-items: stretch; overflow: visible; padding-bottom: 8px; }
+  .step { flex-direction: row; min-width: 0; flex: none; text-align: left; align-items: flex-start; gap: 14px; padding: 9px 0; }
+  .step .nodo { width: 34px; height: 34px; font-size: 13px; flex-shrink: 0; }
+  .step::before { left: 16px; top: 0; width: 2px; height: 100%; }
+  .step:first-child::before { top: 26px; height: calc(100% - 26px); }
+  .step:last-child::before { height: 26px; }
+  .step:only-child::before { display: none; }
+  .step .t { margin-top: 7px; font-size: 13.5px; }
   .sidebar {
     position: fixed; bottom: 0; top: auto; left: 0; right: 0; width: 100%; height: auto;
     flex-direction: row; align-items: center; padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
@@ -312,6 +326,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); }
   .nav-item svg { width: 20px; height: 20px; }
   .topbar { padding: 16px 18px 12px; }
   .topbar h1 { font-size: 19px; }
+  .prov-dot { display: inline-block; }
   .views { padding: 4px 16px 120px; }
   .search { min-width: 0; }
   .search input { width: 110px; }
@@ -361,6 +376,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); }
     <header class="topbar">
       <h1 id="view-title">Agentes</h1>
       <div class="topbar-right">
+        <span class="prov-dot" id="prov-dot" title="Estado del proveedor"></span>
         <div class="search" id="search-wrap" style="display:none">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input id="buscar-agente" placeholder="Buscar agente…" autocomplete="off">
@@ -489,7 +505,7 @@ function nombreCorto(idModelo) {
 function hace(iso) {
   if (!iso) return "";
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-  if (isNaN(s) || s < 0) return "";
+  if (isNaN(s)) return "";
   if (s < 90) return "ahora mismo";
   if (s < 3600) { const m = Math.floor(s / 60); return `hace ${m} min`; }
   if (s < 86400) { const h = Math.floor(s / 3600); return `hace ${h} h`; }
@@ -543,9 +559,7 @@ function renderAgentes() {
     t.addEventListener("click", () => abrirChat(t.dataset.slug)));
 }
 function cardHtml(a) {
-  const act = a.ultima_actividad ? hace(a.ultima_actividad) : "";
-  const reciente = a.ultima_actividad &&
-    (Date.now() - new Date(a.ultima_actividad).getTime()) < 3 * 3600 * 1000;
+  const act = a.ultima_actividad ? (hace(a.ultima_actividad) || "ahora mismo") : "";
   return `
   <div class="agent-card" data-slug="${esc(a.slug)}">
     <div class="agent-top">
@@ -558,7 +572,7 @@ function cardHtml(a) {
     ${a.resumen ? `<p class="agent-resumen">${esc(a.resumen)}</p>` : ""}
     <div class="agent-foot">
       <span class="tag" title="${esc(a.modelo_efectivo || a.modelo)}">${esc(nombreCorto(a.modelo_efectivo || a.modelo))}</span>
-      <span class="activity${reciente ? " recent" : ""}"><span class="dot"></span>${act ? "activo " + esc(act) : "sin actividad"}</span>
+      <span class="activity" title="Última ejecución registrada"><span class="dot"></span>${act ? esc(act) : "sin ejecuciones"}</span>
     </div>
   </div>`;
 }
@@ -837,6 +851,7 @@ async function cargarEmpresa() {
   const pill = $("provider-pill");
   pill.classList.toggle("on", !!e.proxy_configurado);
   $("provider-txt").textContent = e.proxy_configurado ? "Proveedor conectado" : "Sin proveedor";
+  $("prov-dot").classList.toggle("on", !!e.proxy_configurado);
 }
 
 /* ---------- Configuración ---------- */
