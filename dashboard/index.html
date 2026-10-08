@@ -54,6 +54,13 @@
           padding:14px 20px; }
   .stat b { font-size:24px; display:block; }
   .stat span { color:var(--suave); font-size:13px; }
+  .traza { margin-top:14px; }
+  .delegacion { border:1px solid var(--borde); border-radius:8px; padding:10px 14px;
+                margin:8px 0; font-size:13px; background:#141821; }
+  .delegacion.ok { border-left:3px solid var(--ok); }
+  .delegacion.fallo { border-left:3px solid var(--err); }
+  .delegacion .quien { font-weight:600; margin-bottom:4px; }
+  .delegacion .tarea-del { color:var(--suave); margin-bottom:6px; }
   .modal-fondo { position:fixed; inset:0; background:rgba(0,0,0,.6); display:none;
                  align-items:flex-start; justify-content:center; padding:40px 16px; z-index:10; }
   .modal-fondo.abierto { display:flex; }
@@ -90,11 +97,11 @@
       <input type="password" id="cfg-LLM_API_KEY" placeholder="••••">
       <div class="ayuda" id="ayuda-key"></div>
       <label>Modelo base (agente por defecto)</label>
-      <input type="text" id="cfg-MODELO_BASE">
+      <input type="text" id="cfg-MODELO_EMPRESA_BASE">
       <label>Modelo de razonamiento (análisis pesado)</label>
-      <input type="text" id="cfg-MODELO_RAZONAMIENTO">
+      <input type="text" id="cfg-MODELO_EMPRESA_RAZONAMIENTO">
       <label>Modelo ligero (alto volumen, bajo costo)</label>
-      <input type="text" id="cfg-MODELO_LIGERO">
+      <input type="text" id="cfg-MODELO_EMPRESA_LIGERO">
       <label>URL del proxy LiteLLM</label>
       <input type="text" id="cfg-LITELLM_BASE_URL">
       <button class="accion" onclick="guardarConfig()">Guardar</button>
@@ -120,7 +127,10 @@
     <label>Tarea para el agente</label>
     <textarea id="modal-tarea" placeholder="Describí la tarea en lenguaje natural…"></textarea>
     <button class="accion" id="btn-ejecutar" onclick="ejecutarAgente()">Ejecutar</button>
+    <button class="secundario" id="btn-orquestar" onclick="orquestarGG()"
+            style="display:none;margin-left:8px" title="El Gerente General delega a especialistas y consolida">Orquestar</button>
     <div class="error" id="modal-error"></div>
+    <div class="traza" id="modal-traza" style="display:none"></div>
     <div class="respuesta" id="modal-respuesta" style="display:none"></div>
   </div>
 </div>
@@ -158,10 +168,15 @@ function abrirModal(slug) {
   const a = window._agentes[slug];
   agenteActual = slug;
   $("modal-titulo").textContent = a.nombre;
-  $("modal-sub").textContent = (a.area ? a.area + " · " : "") + a.modelo;
+  const mod = a.modelo_efectivo && a.modelo_efectivo !== a.modelo
+    ? `${a.modelo} → ${a.modelo_efectivo}` : a.modelo;
+  $("modal-sub").textContent = (a.area ? a.area + " · " : "") + mod;
   $("modal-tarea").value = "";
   $("modal-error").textContent = "";
   $("modal-respuesta").style.display = "none";
+  $("modal-traza").style.display = "none";
+  $("modal-traza").innerHTML = "";
+  $("btn-orquestar").style.display = slug === "gerente-general" ? "" : "none";
   $("modal-fondo").classList.add("abierto");
 }
 function cerrarModal() { $("modal-fondo").classList.remove("abierto"); }
@@ -191,6 +206,45 @@ async function ejecutarAgente() {
   btn.disabled = false; btn.textContent = "Ejecutar";
 }
 
+async function orquestarGG() {
+  const tarea = $("modal-tarea").value.trim();
+  if (!tarea) return;
+  const btn = $("btn-orquestar");
+  btn.disabled = true; btn.textContent = "Orquestando…";
+  $("modal-error").textContent = "";
+  $("modal-respuesta").style.display = "none";
+  const traza = $("modal-traza");
+  traza.style.display = "none"; traza.innerHTML = "";
+  try {
+    const r = await api("/api/orquestar", { method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ tarea }) });
+    if (r.ok) {
+      if (r.delegaciones && r.delegaciones.length) {
+        traza.style.display = "block";
+        traza.innerHTML = "<b>Delegaciones del Gerente General</b>" + r.delegaciones.map(d => `
+          <div class="delegacion ${d.ok ? "ok" : "fallo"}">
+            <div class="quien">${d.ok ? "✓" : "✕"} ${d.agente}</div>
+            <div class="tarea-del">${esc(d.tarea || "")}</div>
+            <div>${esc(d.ok ? (d.texto || "").slice(0, 600) : ("Error: " + (d.error || "")))}</div>
+          </div>`).join("");
+      }
+      const el = $("modal-respuesta");
+      el.style.display = "block";
+      el.textContent = (r.delega ? "" : "(sin delegación — respuesta directa)\n\n") + r.texto;
+    } else {
+      $("modal-error").textContent = "Error: " + (r.error || "desconocido");
+    }
+  } catch (e) {
+    $("modal-error").textContent = "Error de conexión con el dashboard.";
+  }
+  btn.disabled = false; btn.textContent = "Orquestar";
+}
+
+function esc(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 async function cargarAuditoria() {
   const eventos = await api("/api/auditoria?limite=50");
   $("lista-auditoria").innerHTML = eventos.length ? eventos.map(e => `
@@ -205,7 +259,7 @@ async function cargarAuditoria() {
 
 async function cargarConfig() {
   const c = await api("/api/config");
-  for (const k of ["MODELO_BASE", "MODELO_RAZONAMIENTO", "MODELO_LIGERO", "LITELLM_BASE_URL"])
+  for (const k of ["MODELO_EMPRESA_BASE", "MODELO_EMPRESA_RAZONAMIENTO", "MODELO_EMPRESA_LIGERO", "LITELLM_BASE_URL"])
     $("cfg-" + k).value = c[k] || "";
   $("cfg-LLM_API_KEY").value = "";
   $("cfg-LLM_API_KEY").placeholder = c.LLM_API_KEY.configurada
@@ -218,7 +272,7 @@ async function cargarConfig() {
 
 async function guardarConfig() {
   const cuerpo = {};
-  for (const k of ["LLM_API_KEY", "MODELO_BASE", "MODELO_RAZONAMIENTO", "MODELO_LIGERO", "LITELLM_BASE_URL"])
+  for (const k of ["LLM_API_KEY", "MODELO_EMPRESA_BASE", "MODELO_EMPRESA_RAZONAMIENTO", "MODELO_EMPRESA_LIGERO", "LITELLM_BASE_URL"])
     cuerpo[k] = $("cfg-" + k).value;
   const r = await api("/api/config", { method: "POST",
     headers: {"Content-Type": "application/json"}, body: JSON.stringify(cuerpo) });

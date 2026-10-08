@@ -2,7 +2,7 @@
 """Dashboard web local de la empresa (Company OS).
 
 Panel visual para manejar y configurar todo sin tocar la terminal:
-  - Agentes: ver los 18, asignarles tareas, leer respuestas.
+  - Agentes: ver los 25, asignarles tareas, leer respuestas.
   - Auditoría: quién hizo qué, cuándo, cuántos tokens.
   - Configuración: API key y modelos en formulario (sin editar archivos).
   - Empresa: pipeline y productos de un vistazo.
@@ -34,9 +34,9 @@ from nucleo import agente as modulo_agente  # noqa: E402
 
 CLAVES_ENV = [
     "LLM_API_KEY",
-    "MODELO_BASE",
-    "MODELO_RAZONAMIENTO",
-    "MODELO_LIGERO",
+    "MODELO_EMPRESA_BASE",
+    "MODELO_EMPRESA_RAZONAMIENTO",
+    "MODELO_EMPRESA_LIGERO",
     "LITELLM_BASE_URL",
     "LITELLM_MASTER_KEY",
 ]
@@ -111,7 +111,8 @@ def info_agentes() -> list:
                     break
         except OSError:
             nombre, area = slug, ""
-        datos.append({"slug": slug, "nombre": nombre, "area": area, "modelo": modelo})
+        datos.append({"slug": slug, "nombre": nombre, "area": area, "modelo": modelo,
+                      "modelo_efectivo": modulo_agente._resolver_modelo(modelo)})
     return datos
 
 
@@ -231,6 +232,29 @@ class Manejador(BaseHTTPRequestHandler):
                             "texto": r["texto"],
                             "tokens_entrada": r["tokens_entrada"],
                             "tokens_salida": r["tokens_salida"]})
+            except Exception as e:  # noqa: BLE001 - se reporta al dashboard
+                self._json({"ok": False, "error": str(e)})
+        elif ruta.path == "/api/orquestar":
+            # El Gerente General planifica, delega a especialistas y consolida.
+            cuerpo = self._cuerpo()
+            tarea = cuerpo.get("tarea", "")
+            if not tarea:
+                self._json({"ok": False, "error": "falta tarea"}, 400)
+                return
+            try:
+                for k, v in leer_env().items():
+                    os.environ.setdefault(k, v)
+                try:
+                    from nucleo import cliente as modulo_cliente
+                    from nucleo import delegacion as modulo_delegacion
+                except ImportError:
+                    raise RuntimeError(
+                        "Falta el paquete 'openai': instalá dependencias con "
+                        "`pip install -r runtime/requirements.txt`."
+                    )
+                c = modulo_cliente.crear_cliente()
+                r = modulo_delegacion.orquestar(tarea, c)
+                self._json({"ok": True, **r})
             except Exception as e:  # noqa: BLE001 - se reporta al dashboard
                 self._json({"ok": False, "error": str(e)})
         elif ruta.path == "/api/config":

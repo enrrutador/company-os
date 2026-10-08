@@ -61,6 +61,11 @@ def prompt_sistema(slug: str) -> str:
     except FileNotFoundError:
         transversal = ""
     prompt = (
+        f"QUIÉN TE HABLA: Estás hablando con {_dueno_nombre()}, el dueño y fundador "
+        "de la empresa. Es el único humano en la empresa: todos los demás son "
+        "agentes de IA como vos. Todas las decisiones finales, aprobaciones y "
+        "escalaciones son suyas. Tratá cada mensaje suyo como una orden o "
+        "consulta del dueño.\n\n"
         "Sos un agente de la empresa. Esta es tu ficha de rol:\n\n"
         f"{ficha}\n\n"
         "Y esta es tu habilidad operativa (cómo ejecutar tu trabajo):\n\n"
@@ -73,10 +78,36 @@ def prompt_sistema(slug: str) -> str:
         )
     prompt += (
         "Respondé en español rioplatense, directo y sin relleno. "
-        "Si la tarea excede tus permisos o necesitás aprobación de Fabian, "
+        f"Si la tarea excede tus permisos o necesitás aprobación de {_dueno_nombre()}, "
         "decilo explícitamente en vez de inventar."
     )
+    if slug == "gerente-general":
+        prompt += "\n\n" + _BLOQUE_DELEGACION
     return prompt
+
+
+def _dueno_nombre() -> str:
+    """Nombre del dueño/fundador (el único humano). Configurable por entorno."""
+    return os.environ.get("DUENO_NOMBRE", "Fabian")
+
+
+_BLOQUE_DELEGACION = """DELEGACIÓN (tu herramienta como gerente):
+Sos el segundo al mando: cuando el dueño te pide algo que requiere trabajo de
+especialistas, NO lo hagas todo vos. Delegá incluyendo en tu respuesta un bloque
+con este formato exacto:
+
+DELEGAR:
+- agente: <slug-del-agente>
+  tarea: "<tarea en lenguaje natural, autocontenida, en una línea>"
+
+Reglas:
+- Usá solo slugs de agentes que existen en la empresa.
+- Máximo 5 delegaciones por respuesta.
+- Una tarea concreta y autocontenida por agente.
+- No delegues lo que puedas resolver vos directamente con tu propio criterio.
+El sistema va a ejecutar cada tarea delegada y te va a devolver los resultados
+para que des la respuesta final consolidada al dueño. Si nada requiere
+delegación, respondé directamente sin el bloque DELEGAR."""
 
 
 def modelo_para(slug: str) -> str:

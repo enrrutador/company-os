@@ -31,9 +31,9 @@ curl http://localhost:4000/v1/models \
 
 | Variable | Uso | Sugerencia |
 |---|---|---|
-| `MODELO_BASE` | Agente por defecto | Tu modelo equilibrado (ej. `openai/gpt-4o-mini`) |
-| `MODELO_RAZONAMIENTO` | Análisis pesado, decisiones, equipo rojo | Tu modelo más capaz (ej. `openai/gpt-4o`) |
-| `MODELO_LIGERO` | Alto volumen, bajo costo (Soporte N1, borradores) | El más barato que te sirva |
+| `MODELO_EMPRESA_BASE` | Agente por defecto | Tu modelo equilibrado (ej. `openai/gpt-4o-mini`) |
+| `MODELO_EMPRESA_RAZONAMIENTO` | Análisis pesado, decisiones, equipo rojo | Tu modelo más capaz (ej. `openai/gpt-4o`) |
+| `MODELO_EMPRESA_LIGERO` | Alto volumen, bajo costo (Soporte N1, borradores) | El más barato que te sirva |
 
 Formato: `<proveedor>/<modelo>` según la convención de LiteLLM.
 Ejemplos: `anthropic/claude-sonnet-4-20250514`, `openrouter/deepseek/deepseek-chat`,
