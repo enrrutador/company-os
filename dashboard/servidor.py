@@ -21,6 +21,7 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -215,6 +216,20 @@ def leer_auditoria(limite: int = 50, agente: str = "") -> dict:
     }
 
 
+def _build_hash() -> str:
+    """Hash corto del commit en ejecución: permite verificar qué versión corre."""
+    try:
+        out = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=RAIZ_REPO,
+                             capture_output=True, text=True, timeout=10)
+        h = out.stdout.strip()
+        return h if re.fullmatch(r"[0-9a-f]{4,40}", h) else "local"
+    except Exception:
+        return "local"
+
+
+BUILD = _build_hash()
+
+
 def estado_empresa() -> dict:
     aplicar_env()
     etapas = []
@@ -239,6 +254,7 @@ def estado_empresa() -> dict:
         "etapas": etapas,
         "productos": productos,
         "proxy_configurado": bool(os.environ.get("LITELLM_MASTER_KEY")),
+        "build": BUILD,
     }
 
 
