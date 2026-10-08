@@ -16,6 +16,7 @@ auditoría como ejecuciones individuales.
 """
 import operator
 import os
+import re
 from typing import TypedDict, Annotated
 
 from langgraph.graph import StateGraph, END
@@ -185,12 +186,25 @@ def grafo_construccion():
 ETAPAS: dict = {}
 
 
+def _patron_veredicto(marca_ok: str) -> "re.Pattern":
+    r"""'VEREDICTO: SEGUIR' → /\bVEREDICTO\s*:\s*SEGUIR\b/i.
+
+    Tolera mayúsculas/minúsculas y espacios (el modelo a veces escribe
+    'veredicto:seguir' o '**VEREDICTO: SEGUIR**'). Si no hay marca,
+    fail-closed: el llamador devuelve el valor_ko.
+    """
+    partes = [re.escape(p) for p in marca_ok.strip().split()]
+    return re.compile(r"\b" + r"\s*".join(partes) + r"\b", re.IGNORECASE)
+
+
 def _nodo_veredicto(clave: str, artefacto_fuente: str,
                     marca_ok: str, valor_ok: str, valor_ko: str):
     """Lee el veredicto de un artefacto y lo guarda en el estado."""
+    patron = _patron_veredicto(marca_ok)
+
     def fn(state: Estado) -> dict:
         texto = state["artefactos"].get(artefacto_fuente, "")
-        veredicto = valor_ok if marca_ok in texto else valor_ko
+        veredicto = valor_ok if patron.search(texto) else valor_ko
         return {
             "veredictos": {clave: veredicto},
             "traza": [f"veredicto {clave}: {veredicto}"],

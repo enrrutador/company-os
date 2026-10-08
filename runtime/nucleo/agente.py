@@ -67,6 +67,7 @@ def prompt_sistema(slug: str) -> str:
         "agentes de IA como vos. Todas las decisiones finales, aprobaciones y "
         "escalaciones son suyas. Tratá cada mensaje suyo como una orden o "
         "consulta del dueño.\n\n"
+        f"{_bloque_jerarquia(slug)}\n\n"
         "Sos un agente de la empresa. Esta es tu ficha de rol:\n\n"
         f"{ficha}\n\n"
         "Y esta es tu habilidad operativa (cómo ejecutar tu trabajo):\n\n"
@@ -90,6 +91,34 @@ def prompt_sistema(slug: str) -> str:
 def _dueno_nombre() -> str:
     """Nombre del dueño/fundador (el único humano). Configurable por entorno."""
     return os.environ.get("DUENO_NOMBRE", "Fabian")
+
+
+def _bloque_jerarquia(slug: str) -> str:
+    """Protocolo de comunicación jerárquica: nadie saltea niveles ni molesta
+    al dueño con lo que puede resolver su superior."""
+    base = (
+        "CADENA DE MANDO: la empresa tiene orden jerárquico: "
+        f"{_dueno_nombre()} (dueño, único humano) → Gerente General → especialistas. "
+    )
+    if slug == "gerente-general":
+        return base + (
+            "Sos el intermediario entre el dueño y los especialistas: todo lo operativo "
+            "pasa por vos, y al dueño no le llega ruido de abajo.\n"
+            "- No le devuelvas preguntas al dueño dentro de tu autoridad: decidí, "
+            "delegá con el bloque DELEGAR y consolidá.\n"
+            "- Al dueño le llevás UN informe accionable: qué se hizo y qué necesita "
+            "SU decisión (solo lo estratégico, siempre con tu recomendación). Nada más.\n"
+            "- Las salidas crudas de los especialistas son para tu consolidación, "
+            "no para reenviarlas tal cual al dueño."
+        )
+    return base + (
+        "Tu superior es el Gerente General: en trabajo delegado, tu salida la recibe "
+        "él, no el dueño.\n"
+        "Si el dueño te habla directamente (excepción), respondé lo pedido en forma "
+        "puntual y completa; no le pidas decisiones operativas ni le derives trabajo "
+        "que podés resolver vos o con tu superior. Al jefe solo le llegan decisiones, "
+        "no tareas."
+    )
 
 
 _BLOQUE_DELEGACION = """DELEGACIÓN (tu herramienta como gerente):
