@@ -80,7 +80,24 @@ def prompt_sistema(slug: str) -> str:
 
 
 def modelo_para(slug: str) -> str:
-    return REGISTRO[slug][1]
+    return _resolver_modelo(REGISTRO[slug][1])
+
+
+# Mapeo opcional de los nombres lógicos del proxy a modelos reales del proveedor.
+# Permite correr sin el proxy LiteLLM (p. ej. en Kaggle/Colab) apuntando directo
+# al proveedor: LITELLM_BASE_URL=https://api.openai.com/v1 + estas variables.
+_MAPEO_MODELOS = {
+    "empresa-base": "MODELO_EMPRESA_BASE",
+    "empresa-razonamiento": "MODELO_EMPRESA_RAZONAMIENTO",
+    "empresa-ligero": "MODELO_EMPRESA_LIGERO",
+}
+
+
+def _resolver_modelo(modelo: str) -> str:
+    var = _MAPEO_MODELOS.get(modelo)
+    if var and os.environ.get(var):
+        return os.environ[var]
+    return modelo
 
 
 def ejecutar_agente(slug: str, tarea: str, cliente, forzar_modelo: str = "") -> dict:
@@ -88,7 +105,7 @@ def ejecutar_agente(slug: str, tarea: str, cliente, forzar_modelo: str = "") -> 
     from . import auditoria, cliente as modulo_cliente
 
     sistema = prompt_sistema(slug)
-    modelo = forzar_modelo or modelo_para(slug)
+    modelo = _resolver_modelo(forzar_modelo or modelo_para(slug))
     resultado = modulo_cliente.completar(cliente, modelo, sistema, tarea)
     auditoria.registrar(
         agente=slug,

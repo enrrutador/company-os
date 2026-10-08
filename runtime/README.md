@@ -105,3 +105,23 @@ DESCARTADO, el grafo se detiene ahí y lo reporta (no se construye nada).
 ```bash
 python3 pruebas/test_producto_mock.py   # camino feliz + kill en tesis, contra mock
 ```
+
+## Probar sin computadora (Kaggle)
+
+El runtime corre en la máquina virtual gratuita de Kaggle, sin proxy LiteLLM:
+apunta directo a tu proveedor con estas variables:
+
+```bash
+export LITELLM_BASE_URL="https://api.openai.com/v1"   # o tu proveedor OpenAI-compatible
+export LITELLM_MASTER_KEY="tu-key"
+export MODELO_EMPRESA_BASE="gpt-4o-mini"
+export MODELO_EMPRESA_RAZONAMIENTO="gpt-4o"           # o el que elijas
+export MODELO_EMPRESA_LIGERO="gpt-4o-mini"
+```
+
+`runtime/kaggle/probar-modo-empresa.ipynb` es el notebook listo: lo subís a
+Kaggle (*New Notebook → Upload*), cargás dos secretos (*Add-ons → Secrets*:
+`GITHUB_TOKEN` con acceso al repo y `LLM_API_KEY`), editás proveedor/modelos
+y corrés las celdas en orden: dependencias → clon → smoke test de un agente →
+modo empresa → auditoría. En Kaggle se usa el CLI (el dashboard no expone
+puertos públicos).
