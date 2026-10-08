@@ -3,6 +3,11 @@
 
 Uso:
     python3 ejecutar_pipeline.py construccion --objetivo "..." [--componentes constructor,mobile]
+    python3 ejecutar_pipeline.py producto --objetivo "Creá una web que compare precios de hipermercados"
+
+    El modo "producto" es el modo empresa: el Gerente General orquesta el pipeline
+    punta a punta (tesis → validación → construcción → comercial) y cada etapa
+    puede matar el producto con su veredicto.
 
 Requiere:
     1. El proxy LiteLLM levantado (infraestructura/litellm/README.md).

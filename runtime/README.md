@@ -85,3 +85,23 @@ python3 ejecutar_pipeline.py construccion --objetivo "..." --componentes constru
 ```bash
 python3 pruebas/test_orquestador_mock.py   # grafo completo contra mock
 ```
+
+## Modo empresa (pipeline punta a punta)
+
+Un objetivo en lenguaje natural, y el Gerente General orquesta las etapas:
+
+```bash
+python3 ejecutar_pipeline.py producto --objetivo "Creá una web que compare precios de hipermercados"
+```
+
+Flujo: **tesis** (etapa 1: el GG escribe la tesis, el equipo rojo la ataca,
+veredicto SEGUIR/MATAR) → **validación** (etapa 2: investigación, landing,
+cobro de preventa, veredicto VALIDADO/DESCARTADO) → **construcción**
+(etapa 3) → **comercial** (etapa 6: ICP, outreach, criterios, plan comercial).
+
+Cada etapa puede matar el producto: si la tesis da MATAR o la validación da
+DESCARTADO, el grafo se detiene ahí y lo reporta (no se construye nada).
+
+```bash
+python3 pruebas/test_producto_mock.py   # camino feliz + kill en tesis, contra mock
+```
