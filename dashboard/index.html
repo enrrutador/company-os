@@ -339,6 +339,26 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); }
 }
 .orq-check.ok { background: var(--ok-soft); color: var(--ok); }
 .orq-check.fallo { background: var(--err-soft); color: var(--err); }
+.orq-conclusion {
+  border-top: 1px solid var(--border); margin-top: 8px; padding-top: 12px;
+  font-size: 14px; line-height: 1.6; animation: fadeUp .3s ease; overflow-wrap: anywhere;
+}
+.orq-conclusion p { margin: 0 0 8px; }
+.orq-conclusion h4 { margin: 10px 0 6px; font-size: 14px; }
+.orq-conclusion ul, .orq-conclusion ol { margin: 6px 0; padding-left: 20px; }
+.orq-conclusion pre { background: #05070b; border: 1px solid var(--border); border-radius: 10px; padding: 12px; overflow-x: auto; font-size: 12.5px; font-family: var(--mono); }
+.orq-conclusion code { background: rgba(255,255,255,.07); border-radius: 5px; padding: 1px 6px; font-size: 12.5px; font-family: var(--mono); }
+.orq-conclusion pre code { background: none; padding: 0; }
+.orq-conclusion table { border-collapse: collapse; margin: 8px 0; font-size: 13px; width: 100%; table-layout: fixed; }
+.orq-conclusion th, .orq-conclusion td { border: 1px solid var(--border2); padding: 7px 10px; text-align: left; overflow-wrap: anywhere; }
+.trabajando-badge {
+  position: absolute; top: 14px; right: 14px;
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 700; color: var(--accent2);
+  background: var(--accent-soft); border: 1px solid rgba(91,140,255,.3);
+  padding: 4px 10px; border-radius: 20px;
+}
+.trabajando-badge span { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: pulso 1.2s infinite; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 900px) {
@@ -513,6 +533,21 @@ let agenteActual = null;
 let historialChat = [];
 let controlador = null;
 
+/* Chats persistentes: el chat no se pierde al cerrar el drawer.
+   El trabajo de orquestación corre en el servidor y sigue aunque salgas. */
+let chats = {};
+try { chats = JSON.parse(localStorage.getItem("companyos_chats") || "{}"); }
+catch (e) { chats = {}; }
+function guardarChats() {
+  try { localStorage.setItem("companyos_chats", JSON.stringify(chats)); }
+  catch (e) { /* almacenamiento lleno o bloqueado: seguir sin persistir */ }
+}
+function estadoChat(slug) {
+  if (!chats[slug]) chats[slug] = { historial: [], trabajoId: null, terminado: true, vistos: 0 };
+  return chats[slug];
+}
+let pollTimer = null;
+
 function esc(s) {
   return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
     .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -592,6 +627,7 @@ function renderAgentes() {
     </div>`).join("") || `<div class="empty">Sin coincidencias para "${esc(q)}".</div>`;
   document.querySelectorAll(".agent-card").forEach(t =>
     t.addEventListener("click", () => abrirChat(t.dataset.slug)));
+  actualizarInsignias();
 }
 function cardHtml(a) {
   const act = a.ultima_actividad ? (hace(a.ultima_actividad) || "ahora mismo") : "";
@@ -615,9 +651,11 @@ $("buscar-agente").addEventListener("input", renderAgentes);
 
 /* ---------- Chat (drawer) ---------- */
 function abrirChat(slug) {
-  const a = (window._agentes || []).find(x => x.slug === slug);
+  const a = agentePorSlug(slug);
   if (!a) return;
+  detenerPoll();
   agenteActual = slug;
+  historialChat = estadoChat(slug).historial;
   const av = $("chat-avatar");
   av.style.cssText = avatarStyleOk(slug);
   av.textContent = iniciales(a.nombre);
@@ -626,17 +664,30 @@ function abrirChat(slug) {
     ? `${a.modelo} → ${a.modelo_efectivo}` : a.modelo;
   $("chat-sub").textContent = (a.area ? a.area + " · " : "") + mod;
   $("chat-error").textContent = "";
-  $("chat-mensajes").innerHTML = "";
-  historialChat = [];
+  const caja = $("chat-mensajes");
+  caja.innerHTML = "";
+  for (const h of historialChat) {
+    agregarBurbuja(h.rol === "usuario" ? "usuario" : "agente",
+                   h.rol === "usuario" ? esc(h.texto) : md(h.texto));
+  }
   $("chat-input").value = "";
   $("chat-input").style.height = "auto";
   $("btn-orquestar").style.display = slug === "gerente-general" ? "" : "none";
   cargarModelos();
   $("drawer-fondo").classList.add("abierto");
+  const est = estadoChat(slug);
+  if (est.trabajoId && !est.terminado) {
+    // El trabajo siguió corriendo: reconstruir la línea de tiempo y reenganchar
+    est.vistos = 0;
+    crearTarjetaOrq();
+    iniciarPoll();
+  }
+  actualizarBotonDetener();
   setTimeout(() => $("chat-input").focus(), 250);
 }
 function cerrarChat() {
-  cancelarEjecucion();
+  cancelarEjecucion(); // aborta un mensaje normal en curso; los trabajos siguen
+  detenerPoll();
   $("drawer-fondo").classList.remove("abierto");
 }
 $("chat-cerrar").addEventListener("click", cerrarChat);
@@ -656,7 +707,18 @@ $("chat-input").addEventListener("input", e => {
 });
 $("btn-enviar").addEventListener("click", enviarMensaje);
 $("btn-orquestar").addEventListener("click", orquestarGG);
-$("btn-cancelar").addEventListener("click", cancelarEjecucion);
+$("btn-cancelar").addEventListener("click", async () => {
+  cancelarEjecucion(); // aborta un mensaje normal en curso
+  const est = agenteActual ? estadoChat(agenteActual) : null;
+  if (est && est.trabajoId && !est.terminado) {
+    try {
+      await api("/api/trabajos/cancelar", { method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: est.trabajoId }) });
+    } catch (e) { /* igual se verá en el próximo sondeo */ }
+    sondear();
+  }
+});
 
 function agregarBurbuja(rol, contenidoHtml, modelo) {
   const caja = $("chat-mensajes");
@@ -732,6 +794,7 @@ async function enviarMensaje() {
     if (r.ok) {
       historialChat.push({ rol: "usuario", texto });
       historialChat.push({ rol: "agente", texto: r.texto });
+      guardarChats();
       agregarBurbuja("agente", md(r.texto), r.modelo);
     } else {
       $("chat-error").textContent = "Error: " + (r.error || "desconocido");
@@ -749,115 +812,166 @@ function agentePorSlug(slug) {
   return (window._agentes || []).find(x => x.slug === slug);
 }
 
+/* ---------- Orquestación por trabajos (sigue aunque cierres el chat) ---------- */
+function crearTarjetaOrq() {
+  let t = $("orq-tarjeta");
+  if (t) t.remove();
+  const caja = $("chat-mensajes");
+  t = document.createElement("div");
+  t.className = "orq";
+  t.id = "orq-tarjeta";
+  t.innerHTML =
+    `<div class="orq-head"><span class="orq-pulso"></span>` +
+    `<b>Gerente General orquestando</b>` +
+    `<span class="orq-contador"></span></div><div class="orq-lineas"></div>`;
+  caja.appendChild(t);
+  caja.scrollTop = caja.scrollHeight;
+  return t;
+}
+
+function procesarEventoOrq(ev) {
+  const t = $("orq-tarjeta") || crearTarjetaOrq();
+  const lineasEl = t.querySelector(".orq-lineas");
+  const contEl = t.querySelector(".orq-contador");
+  const headEl = t.querySelector(".orq-head b");
+  const pulsoEl = t.querySelector(".orq-pulso");
+  const caja = $("chat-mensajes");
+  if (ev.tipo === "delegacion_inicio") {
+    const a = agentePorSlug(ev.agente);
+    const d = document.createElement("div");
+    d.className = "orq-linea";
+    d.dataset.indice = ev.indice;
+    d.innerHTML =
+      `<div class="avatar" style="${avatarStyleOk(ev.agente)}">${esc(iniciales(a ? a.nombre : ev.agente))}</div>` +
+      `<div class="orq-cuerpo"><div class="orq-nombre">${esc(a ? a.nombre : ev.agente)}` +
+      `<span class="orq-estado trabajando">trabajando…</span></div>` +
+      `<div class="orq-tarea">${esc(ev.tarea || "")}</div></div>` +
+      `<div class="spinner"></div>`;
+    lineasEl.appendChild(d);
+    contEl.textContent = `${ev.indice}/${ev.total}`;
+  } else if (ev.tipo === "delegacion_fin") {
+    const d = lineasEl.querySelector(`[data-indice="${ev.indice}"]`);
+    if (d) {
+      const est = d.querySelector(".orq-estado");
+      if (est) {
+        est.className = "orq-estado " + (ev.ok ? "ok" : "fallo");
+        est.textContent = ev.ok ? "listo" : "falló";
+      }
+      const spin = d.querySelector(".spinner");
+      if (spin) {
+        spin.className = "orq-check " + (ev.ok ? "ok" : "fallo");
+        spin.textContent = ev.ok ? "✓" : "✕";
+      }
+    }
+  } else if (ev.tipo === "consolidando") {
+    headEl.textContent = "Gerente General consolidando";
+  } else if (ev.tipo === "final") {
+    pulsoEl.classList.add("fin");
+    headEl.textContent = ev.cancelado ? "Orquestación detenida"
+      : (ev.delega ? `Orquestación completa · ${(ev.delegaciones || []).length} delegaciones`
+                   : "Respuesta directa (sin delegación)");
+    contEl.textContent = "";
+    const c = document.createElement("div");
+    c.className = "orq-conclusion";
+    c.innerHTML = md(ev.texto || "");
+    t.appendChild(c);
+  } else if (ev.tipo === "error") {
+    pulsoEl.classList.add("fin");
+    headEl.textContent = "Error en la orquestación";
+    $("chat-error").textContent = "Error: " + (ev.error || "desconocido");
+  }
+  caja.scrollTop = caja.scrollHeight;
+}
+
+function iniciarPoll() {
+  detenerPoll();
+  sondear();
+  pollTimer = setInterval(sondear, 2000);
+}
+function detenerPoll() {
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+}
+async function sondear() {
+  const slug = agenteActual;
+  if (!slug) { detenerPoll(); return; }
+  const est = estadoChat(slug);
+  if (!est.trabajoId || est.terminado) {
+    detenerPoll();
+    actualizarBotonDetener();
+    return;
+  }
+  try {
+    const d = await api(`/api/trabajos?id=${encodeURIComponent(est.trabajoId)}&desde=${est.vistos}`);
+    if (!d.ok) return;
+    for (const ev of d.eventos) procesarEventoOrq(ev);
+    est.vistos += d.eventos.length;
+    guardarChats();
+    if (d.terminado) {
+      est.terminado = true;
+      guardarChats();
+      detenerPoll();
+      actualizarBotonDetener();
+      actualizarInsignias();
+    }
+  } catch (e) { /* reintenta en el próximo ciclo */ }
+}
+
+function actualizarBotonDetener() {
+  const est = agenteActual ? estadoChat(agenteActual) : null;
+  const activo = !!(est && est.trabajoId && !est.terminado);
+  $("btn-cancelar").style.display = activo ? "" : "none";
+  if (agenteActual === "gerente-general") $("btn-orquestar").disabled = activo;
+}
+
+function actualizarInsignias() {
+  document.querySelectorAll(".agent-card").forEach(card => {
+    const est = chats[card.dataset.slug];
+    const activo = !!(est && est.trabajoId && !est.terminado);
+    let badge = card.querySelector(".trabajando-badge");
+    if (activo && !badge) {
+      badge = document.createElement("span");
+      badge.className = "trabajando-badge";
+      badge.innerHTML = "<span></span>trabajando";
+      card.appendChild(badge);
+    } else if (!activo && badge) {
+      badge.remove();
+    }
+  });
+}
+
 async function orquestarGG() {
   const input = $("chat-input");
   const texto = input.value.trim();
-  if (!texto || controlador) return;
+  const est = estadoChat(agenteActual);
+  if (!texto || (est.trabajoId && !est.terminado)) return;
   input.value = "";
   input.style.height = "auto";
   const modeloElegido = $("chat-modelo").value;
   agregarBurbuja("usuario", esc(texto));
   historialChat.push({ rol: "usuario", texto });
-
-  const caja = $("chat-mensajes");
-  const tarjeta = document.createElement("div");
-  tarjeta.className = "orq";
-  tarjeta.innerHTML =
-    `<div class="orq-head"><span class="orq-pulso"></span>` +
-    `<b>Gerente General orquestando</b>` +
-    `<span class="orq-contador"></span></div><div class="orq-lineas"></div>`;
-  caja.appendChild(tarjeta);
-  caja.scrollTop = caja.scrollHeight;
-  const lineasEl = tarjeta.querySelector(".orq-lineas");
-  const contEl = tarjeta.querySelector(".orq-contador");
-  const headEl = tarjeta.querySelector(".orq-head b");
-  const pulsoEl = tarjeta.querySelector(".orq-pulso");
-  const filas = {};
-
-  controlador = new AbortController();
-  estadoEjecutando(true);
-  $("btn-orquestar").textContent = "Orquestando…";
+  guardarChats();
   $("chat-error").textContent = "";
-
-  const procesar = ev => {
-    if (ev.tipo === "delegacion_inicio") {
-      const a = agentePorSlug(ev.agente);
-      const d = document.createElement("div");
-      d.className = "orq-linea";
-      d.innerHTML =
-        `<div class="avatar" style="${avatarStyleOk(ev.agente)}">${esc(iniciales(a ? a.nombre : ev.agente))}</div>` +
-        `<div class="orq-cuerpo"><div class="orq-nombre">${esc(a ? a.nombre : ev.agente)}` +
-        `<span class="orq-estado trabajando">trabajando…</span></div>` +
-        `<div class="orq-tarea">${esc(ev.tarea || "")}</div></div>` +
-        `<div class="spinner"></div>`;
-      lineasEl.appendChild(d);
-      filas[ev.indice] = d;
-      contEl.textContent = `${ev.indice}/${ev.total}`;
-    } else if (ev.tipo === "delegacion_fin") {
-      const d = filas[ev.indice];
-      if (d) {
-        const est = d.querySelector(".orq-estado");
-        if (est) {
-          est.className = "orq-estado " + (ev.ok ? "ok" : "fallo");
-          est.textContent = ev.ok ? "listo" : "falló";
-        }
-        const spin = d.querySelector(".spinner");
-        if (spin) {
-          spin.className = "orq-check " + (ev.ok ? "ok" : "fallo");
-          spin.textContent = ev.ok ? "✓" : "✕";
-        }
-      }
-    } else if (ev.tipo === "consolidando") {
-      headEl.textContent = "Gerente General consolidando";
-    } else if (ev.tipo === "final") {
-      pulsoEl.classList.add("fin");
-      headEl.textContent = ev.delega
-        ? `Orquestación completa · ${ev.delegaciones.length} delegaciones`
-        : "Respuesta directa (sin delegación)";
-      contEl.textContent = "";
-      historialChat.push({ rol: "agente", texto: ev.texto });
-      agregarBurbuja("agente", md(ev.texto), modeloElegido || null);
-    } else if (ev.tipo === "error") {
-      throw new Error(ev.error || "error desconocido");
-    }
-    caja.scrollTop = caja.scrollHeight;
-  };
-
+  $("btn-orquestar").disabled = true;
+  $("btn-orquestar").textContent = "Iniciando…";
   try {
-    const resp = await fetch("/api/orquestar_stream", {
-      method: "POST", signal: controlador.signal,
+    const r = await api("/api/trabajos", { method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tarea: texto, modelo: modeloElegido })
-    });
-    if (!resp.ok || !resp.body) throw new Error("Error de conexión con el dashboard.");
-    const reader = resp.body.getReader();
-    const dec = new TextDecoder();
-    let buf = "";
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += dec.decode(value, { stream: true });
-      let idx;
-      while ((idx = buf.indexOf("\n\n")) >= 0) {
-        const raw = buf.slice(0, idx).trim();
-        buf = buf.slice(idx + 2);
-        const m = /^data:\s*([\s\S]*)$/.exec(raw);
-        if (m) {
-          try { procesar(JSON.parse(m[1])); }
-          catch (e) { /* evento malformado: ignorar */ }
-        }
-      }
-    }
+      body: JSON.stringify({ tarea: texto, modelo: modeloElegido }) });
+    if (!r.ok) throw new Error(r.error || "no se pudo crear el trabajo");
+    est.trabajoId = r.id;
+    est.terminado = false;
+    est.vistos = 0;
+    guardarChats();
+    crearTarjetaOrq();
+    actualizarBotonDetener();
+    actualizarInsignias();
+    iniciarPoll();
   } catch (e) {
-    const cancelado = e.name === "AbortError";
-    $("chat-error").textContent = cancelado ? "Orquestación cancelada."
-      : "Error: " + (e.message || "desconocido");
-    headEl.textContent = cancelado ? "Orquestación cancelada" : "Orquestación interrumpida";
-    pulsoEl.classList.add("fin");
+    $("chat-error").textContent = "Error: " + (e.message || "desconocido");
   }
-  controlador = null;
+  $("btn-orquestar").disabled = false;
   $("btn-orquestar").textContent = "⚡ Orquestar";
-  estadoEjecutando(false);
+  actualizarBotonDetener();
   $("chat-input").focus();
 }
 

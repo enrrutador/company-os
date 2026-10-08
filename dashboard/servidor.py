@@ -23,7 +23,9 @@ import os
 import re
 import subprocess
 import sys
+import threading
 import time
+import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
 
@@ -230,6 +232,55 @@ def _build_hash() -> str:
 BUILD = _build_hash()
 
 
+
+_TRABAJOS = {}
+_TRABAJOS_LOCK = threading.Lock()
+
+
+def _nuevo_trabajo(tarea: str, modelo: str) -> str:
+    """Crea un trabajo de orquestación que corre en segundo plano."""
+    job_id = uuid.uuid4().hex[:12]
+    with _TRABAJOS_LOCK:
+        viejos = [k for k, v in _TRABAJOS.items() if v["terminado"]]
+        for k in viejos[:max(0, len(viejos) - 20)]:
+            del _TRABAJOS[k]
+        _TRABAJOS[job_id] = {"eventos": [], "terminado": False,
+                             "cancelado": False, "tarea": tarea[:120]}
+    h = threading.Thread(target=_correr_trabajo, args=(job_id, tarea, modelo),
+                         daemon=True)
+    h.start()
+    return job_id
+
+
+def _correr_trabajo(job_id: str, tarea: str, modelo: str) -> None:
+    """Ejecuta la orquestación en un hilo: sobrevive a que se cierre el chat."""
+    from nucleo import cliente as modulo_cliente
+    from nucleo import delegacion as modulo_delegacion
+    job = _TRABAJOS[job_id]
+    try:
+        aplicar_env()
+        c = modulo_cliente.crear_cliente()
+        for ev in modulo_delegacion.orquestar_eventos(tarea, c,
+                                                     forzar_modelo=modelo):
+            with _TRABAJOS_LOCK:
+                if job["cancelado"]:
+                    job["eventos"].append({
+                        "tipo": "final",
+                        "texto": "(Orquestación detenida por el dueño.)",
+                        "delega": True, "delegaciones": [],
+                        "cancelado": True})
+                    break
+                job["eventos"].append(ev)
+            if ev.get("tipo") == "final":
+                break
+    except Exception as e:  # noqa: BLE001 - se reporta al dashboard
+        with _TRABAJOS_LOCK:
+            job["eventos"].append({"tipo": "error", "error": str(e)[:500]})
+    finally:
+        with _TRABAJOS_LOCK:
+            job["terminado"] = True
+
+
 def estado_empresa() -> dict:
     aplicar_env()
     etapas = []
@@ -376,6 +427,21 @@ class Manejador(BaseHTTPRequestHandler):
                 "razonamiento": modulo_agente._resolver_modelo("empresa-razonamiento"),
                 "ligero": modulo_agente._resolver_modelo("empresa-ligero"),
             })
+        elif ruta.path == "/api/trabajos":
+            qs = parse_qs(ruta.query)
+            job_id = qs.get("id", [""])[0]
+            try:
+                desde = int(qs.get("desde", ["0"])[0] or 0)
+            except ValueError:
+                desde = 0
+            with _TRABAJOS_LOCK:
+                job = _TRABAJOS.get(job_id)
+                if not job:
+                    self._json({"ok": False, "error": "trabajo no encontrado"}, 404)
+                    return
+                eventos = job["eventos"][desde:]
+                terminado = job["terminado"]
+            self._json({"ok": True, "eventos": eventos, "terminado": terminado})
         else:
             self._json({"ok": False, "error": "no encontrado"}, 404)
 
@@ -436,41 +502,23 @@ class Manejador(BaseHTTPRequestHandler):
                 self._json({"ok": True, **r})
             except Exception as e:  # noqa: BLE001 - se reporta al dashboard
                 self._json({"ok": False, "error": str(e)})
-        elif ruta.path == "/api/orquestar_stream":
-            # Orquestación en vivo vía SSE: el dashboard muestra cada
-            # delegación a medida que ocurre.
+        elif ruta.path == "/api/trabajos":
+            # Crea un trabajo de orquestación en segundo plano y devuelve su id.
+            # El trabajo sigue corriendo aunque se cierre el chat.
             cuerpo = self._cuerpo()
             tarea = cuerpo.get("tarea", "")
             if not tarea:
                 self._json({"ok": False, "error": "falta tarea"}, 400)
                 return
-            try:
-                aplicar_env()
-                from nucleo import cliente as modulo_cliente
-                from nucleo import delegacion as modulo_delegacion
-                c = modulo_cliente.crear_cliente()
-                modelo = cuerpo.get("modelo", "")
-                self.send_response(200)
-                self.send_header("Content-Type", "text/event-stream")
-                self.send_header("Cache-Control", "no-cache")
-                self.send_header("X-Accel-Buffering", "no")
-                self.end_headers()
-                for evento in modulo_delegacion.orquestar_eventos(
-                        tarea, c, forzar_modelo=modelo):
-                    linea = ("data: " + json.dumps(evento, ensure_ascii=False)
-                             + "\n\n")
-                    self.wfile.write(linea.encode("utf-8"))
-                    self.wfile.flush()
-            except (BrokenPipeError, ConnectionResetError):
-                pass
-            except Exception as e:  # noqa: BLE001 - se reporta por SSE
-                try:
-                    linea = ("data: " + json.dumps(
-                        {"tipo": "error", "error": str(e)}) + "\n\n")
-                    self.wfile.write(linea.encode("utf-8"))
-                    self.wfile.flush()
-                except (BrokenPipeError, ConnectionResetError):
-                    pass
+            job_id = _nuevo_trabajo(tarea, cuerpo.get("modelo", ""))
+            self._json({"ok": True, "id": job_id})
+        elif ruta.path == "/api/trabajos/cancelar":
+            cuerpo = self._cuerpo()
+            with _TRABAJOS_LOCK:
+                job = _TRABAJOS.get(cuerpo.get("id", ""))
+                if job and not job["terminado"]:
+                    job["cancelado"] = True
+            self._json({"ok": True})
         elif ruta.path == "/api/probar":
             try:
                 r = probar_modelos()
