@@ -61,3 +61,27 @@ python3 pruebas/test_e2e_mock.py
 Levanta un servidor mock compatible con la API de OpenAI y corre un agente
 punta a punta sin gastar un centavo: valida el cableado completo
 (CLI → prompt → HTTP → respuesta → auditoría).
+
+## Orquestador multi-agente (LangGraph)
+
+El pipeline como código ejecutable: `orquestador/` implementa las etapas como
+grafos LangGraph que encadenan agentes, pasando artefactos de uno al siguiente.
+
+```bash
+# Etapa 3 (Construcción): spec → diseño → UX → build → revisión → seguridad
+# → QA → (reintento si QA rechaza, máx 2) → SRE → despliegue
+python3 ejecutar_pipeline.py construccion --objetivo "App de lista de tareas"
+python3 ejecutar_pipeline.py construccion --objetivo "..." --componentes constructor,ingeniero-datos
+```
+
+- **Borde condicional real**: si Control de Calidad cierra con `VEREDICTO: RECHAZADO`,
+  el grafo vuelve al build automáticamente (máximo 2 reintentos).
+- **In-the-loop**: el despliegue frena con `PENDIENTE_APROBACION_FABIAN` salvo que
+  se exporte `APROBACION_DESPLIEGUE=si`. Lo irreversible lo aprueba Fabian, siempre.
+- **Artefactos encadenados**: cada nodo recibe los artefactos previos como contexto
+  (recortados a 6000 caracteres para cuidar el contexto).
+- Nuevas etapas se agregan en `orquestador/grafos.py` (diccionario `ETAPAS`).
+
+```bash
+python3 pruebas/test_orquestador_mock.py   # grafo completo contra mock
+```
