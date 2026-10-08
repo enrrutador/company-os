@@ -33,7 +33,7 @@ python3 ejecutar.py contenidos "Dame 3 ideas de post sobre automatización" --mo
 python3 ejecutar.py gerente-general "Resumí el estado de la empresa en 5 líneas"
 ```
 
-Los 25 slugs disponibles: `gerente-general`, `arquitecto`, `constructor`, `desarrollador-mobile`,
+Los 26 slugs disponibles: `gerente-general`, `explorador`, `arquitecto`, `constructor`, `desarrollador-mobile`,
 `ingeniero-datos`, `ingeniero-ml`, `revisor`, `control-de-calidad`, `disenador-ux-ui`,
 `ingeniero-seguridad`, `sre`, `responsable-despliegues`, `prospector`, `contacto-inicial`,
 `calificador`, `custodio-crm`, `soporte-n1`, `responsable-activacion`,
@@ -46,7 +46,7 @@ Cada agente tiene un modelo por defecto del proxy:
 
 | Modelo del proxy | Agentes |
 |---|---|
-| `empresa-razonamiento` | gerente-general, arquitecto, ingeniero-ml, ingeniero-seguridad, revisor, escalamiento, analista, guardian |
+| `empresa-razonamiento` | gerente-general, explorador, arquitecto, ingeniero-ml, ingeniero-seguridad, revisor, escalamiento, analista, guardian |
 | `empresa-base` | constructor, desarrollador-mobile, ingeniero-datos, control-de-calidad, disenador-ux-ui, sre, responsable-despliegues, prospector, contacto-inicial, calificador, responsable-activacion, contenidos, facturador, conciliador, responsable-informes |
 | `empresa-ligero` | custodio-crm, soporte-n1 |
 

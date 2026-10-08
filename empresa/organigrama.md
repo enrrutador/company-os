@@ -1,6 +1,6 @@
 # Organigrama
 
-25 agentes en 7 áreas + Fabian, el único humano.
+26 agentes en 7 áreas + Fabian, el único humano.
 
 ## Jerarquía
 
@@ -11,6 +11,7 @@ Fabian (único humano, dueño y director)
   ▼
 Gerente General (agente directivo)
   │
+  ├── Dirección: Explorador
   ├── Ingeniería & Producto (11): Arquitecto, Constructor (full-stack), Desarrollador Mobile, Ingeniero de Datos, Ingeniero de ML, Revisor, Control de Calidad, Diseñador UX/UI, Ingeniero de Seguridad, SRE, Responsable de Despliegues
   ├── Ventas (4): Prospector, Contacto Inicial, Calificador, Custodio del CRM
   ├── Soporte (3): Soporte Nivel 1, Responsable de Activación, Escalamiento
@@ -38,6 +39,7 @@ Gerente General (agente directivo)
 | Área | Agente | Rol | Ficha |
 |---|---|---|---|
 | **Dirección** | Gerente General | El directivo después de Fabian: delega tareas a cada sector, supervisa la ejecución y reporta avance. El único que habla con todos. | [gerente-general.md](../agentes/direccion/gerente-general.md) |
+| | Explorador | Radar de la empresa: descubre y evalúa ideas nuevas de productos/negocios, mantiene la pila de tesis priorizada (etapa 0). | [explorador.md](../agentes/direccion/explorador.md) |
 | **Ingeniería & Producto** (11) | Arquitecto | Diseña la arquitectura y escribe ADRs antes de construir. Planificador técnico. | [arquitecto.md](../agentes/ingenieria/arquitecto.md) |
 | | Constructor | Full-stack (backend + frontend web). Escribe código y pruebas, no despliega solo. | [constructor.md](../agentes/ingenieria/constructor.md) |
 | | Desarrollador Mobile | Apps iOS/Android multiplataforma. Publica en tiendas solo con aprobación. | [desarrollador-mobile.md](../agentes/ingenieria/desarrollador-mobile.md) |
@@ -63,7 +65,7 @@ Gerente General (agente directivo)
 | | Responsable de Informes | P&L mensual y flujo de caja. Autónomo. | [responsable-informes.md](../agentes/finanzas/responsable-informes.md) |
 | **Operaciones & IT** (1) | Guardián | Monitorea infra y costo de tokens, alerta anomalías y frena agentes con gasto anormal (interruptor de emergencia). Autónomo, límites estrictos (solo lectura + freno de emergencia). | [guardian.md](../agentes/operaciones/guardian.md) |
 
-**Total: 25 agentes** + Fabian (único humano).
+**Total: 26 agentes** + Fabian (único humano).
 
 ## Notas de gobierno
 

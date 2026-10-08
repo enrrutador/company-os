@@ -1,7 +1,7 @@
 # Conector de modelos — LiteLLM
 
 Este es el enchufe entre la empresa y los proveedores de LLM. Un solo proxy local
-habla con el proveedor que elijas; los 25 agentes hablan solo con el proxy.
+habla con el proveedor que elijas; los 26 agentes hablan solo con el proxy.
 Cambiar de proveedor o de modelo = cambiar dos líneas del `.env`, sin tocar código.
 
 ## Puesta en marcha (5 minutos)

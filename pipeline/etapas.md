@@ -6,8 +6,8 @@ Detalle operativo de cada etapa. Convención: **quién ejecuta**, **artefacto de
 
 ## 0. Búsqueda (continuo)
 
-- **Ejecuta:** [Analista](../agentes/marketing/analista.md). Autónomo.
-- **Qué hace:** escanea mercado, competencia y pedidos de clientes en forma permanente; mantiene una **pila de tesis priorizada**. El pipeline nunca depende de la inspiración del momento.
+- **Ejecuta:** [Explorador](../agentes/direccion/explorador.md). Autónomo.
+- **Qué hace:** escanea mercado, competencia y pedidos de clientes en forma permanente; mantiene una **pila de tesis priorizada**. El pipeline nunca depende de la inspiración del momento. (Antes lo hacía el Analista; desde 2026-10-08 es un rol dedicado.)
 - **Artefacto de traspaso:** pila de tesis priorizada (cada entrada: problema, segmento, evidencia inicial).
 - **Compuerta:** ninguna; es continuo. El Gerente General selecciona qué tesis entra a la etapa 1 según WIP disponible.
 

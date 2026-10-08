@@ -34,7 +34,7 @@ Toda la pila es de código abierto y autohospedada. El único "costo" es tiempo 
 - **Conector de modelos** ([litellm/](litellm/)): proxy LiteLLM como puerta única a los
   proveedores. Fabian pone su API key y elige los modelos en el `.env`; los agentes
   no tocan keys. Guía de 5 minutos en [litellm/README.md](litellm/README.md).
-- **Runtime de agentes** ([../runtime/](../runtime/)): los 25 agentes ejecutables —
+- **Runtime de agentes** ([../runtime/](../runtime/)): los 26 agentes ejecutables —
   cada uno combina su ficha + su SKILL.md en el prompt del sistema y corre contra
   el proxy. CLI: `python3 ejecutar.py <agente> "<tarea>"`. Todo queda en
   `runtime/registro/auditoria.jsonl`.
