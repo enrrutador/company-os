@@ -50,7 +50,7 @@ def main() -> int:
         c = cliente.crear_cliente()
         if args.orquestar:
             from nucleo import delegacion as modulo_delegacion
-            r = modulo_delegacion.orquestar(args.tarea, c)
+            r = modulo_delegacion.orquestar(args.tarea, c, forzar_modelo=args.modelo)
             print("--- gerente-general (orquestador) ---\n")
             if r["delegaciones"]:
                 print("Delegaciones:")

@@ -95,6 +95,10 @@
   .chat-entrada { display:flex; gap:8px; align-items:flex-end; }
   .chat-entrada textarea { flex:1; min-height:44px; max-height:120px; margin:0; }
   .chat-entrada button { white-space:nowrap; }
+  .chat-modelo-fila { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+  .chat-modelo-fila label { white-space:nowrap; }
+  .chat-modelo-fila select { flex:1; background:#11141b; border:1px solid var(--borde);
+    color:var(--texto); border-radius:8px; padding:8px 10px; font-size:13px; }
   .modal-fondo { position:fixed; inset:0; background:rgba(0,0,0,.6); display:none;
                  align-items:flex-start; justify-content:center; padding:40px 16px; z-index:10; }
   .modal-fondo.abierto { display:flex; }
@@ -147,7 +151,7 @@
     <div class="panel">
       <h3 style="margin-top:0">Proveedor y modelos</h3>
       <label>API key del proveedor</label>
-      <input type="password" id="cfg-LLM_API_KEY" placeholder="••••">
+      <input type="password" id="cfg-LITELLM_MASTER_KEY" placeholder="••••">
       <div class="ayuda" id="ayuda-key"></div>
       <label>Modelo base (agente por defecto)</label>
       <input type="text" id="cfg-MODELO_EMPRESA_BASE">
@@ -183,6 +187,10 @@
     <h2 id="modal-titulo"></h2>
     <p id="modal-sub" style="color:var(--suave);font-size:13px"></p>
     <div class="chat-mensajes" id="chat-mensajes"></div>
+    <div class="chat-modelo-fila">
+      <label for="chat-modelo">Modelo</label>
+      <select id="chat-modelo"><option value="">Por defecto del agente</option></select>
+    </div>
     <div class="chat-entrada">
       <textarea id="chat-input" rows="2"
                 placeholder="Escribile al agente… (Enter para enviar, Shift+Enter para salto de línea)"></textarea>
@@ -266,6 +274,7 @@ function abrirModal(slug) {
   historialChat = [];
   $("chat-input").value = "";
   $("btn-orquestar").style.display = slug === "gerente-general" ? "" : "none";
+  cargarModelos();
   $("modal-fondo").classList.add("abierto");
   $("chat-input").focus();
 }
@@ -355,14 +364,40 @@ function horaCorta() {
   return new Date().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
 }
 
-function agregarBurbuja(rol, contenidoHtml) {
+function agregarBurbuja(rol, contenidoHtml, modelo) {
   const caja = $("chat-mensajes");
   const d = document.createElement("div");
   d.className = "burbuja " + (rol === "usuario" ? "burbuja-usuario" : "burbuja-agente");
-  d.innerHTML = contenidoHtml + `<span class="hora">${horaCorta()}</span>`;
+  const pie = modelo ? `${horaCorta()} · ${esc(modelo)}` : horaCorta();
+  d.innerHTML = contenidoHtml + `<span class="hora">${pie}</span>`;
   caja.appendChild(d);
   caja.scrollTop = caja.scrollHeight;
   return d;
+}
+
+function nombreCorto(idModelo) {
+  const partes = String(idModelo || "").split("/");
+  return partes[partes.length - 1] || idModelo;
+}
+
+async function cargarModelos() {
+  const sel = $("chat-modelo");
+  const elegido = sel.value;
+  sel.innerHTML = '<option value="">Por defecto del agente</option>';
+  try {
+    const m = await api("/api/modelos");
+    const niveles = [["Base", m.base], ["Razonamiento", m.razonamiento], ["Ligero", m.ligero]];
+    const vistos = new Set();
+    for (const [nombre, id] of niveles) {
+      if (!id || vistos.has(id)) continue;
+      vistos.add(id);
+      const op = document.createElement("option");
+      op.value = id;
+      op.textContent = `${nombre} · ${nombreCorto(id)}`;
+      sel.appendChild(op);
+    }
+  } catch (e) { /* sin modelos: queda el valor por defecto */ }
+  if ([...sel.options].some(o => o.value === elegido)) sel.value = elegido;
 }
 
 function mostrarEscribiendo() {
@@ -383,6 +418,7 @@ async function enviarMensaje() {
   const texto = input.value.trim();
   if (!texto || controlador) return;
   input.value = "";
+  const modeloElegido = $("chat-modelo").value;
   agregarBurbuja("usuario", esc(texto));
   mostrarEscribiendo();
   controlador = new AbortController();
@@ -391,13 +427,14 @@ async function enviarMensaje() {
   try {
     const r = await fetch("/api/ejecutar", { method: "POST", signal: controlador.signal,
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ slug: agenteActual, tarea: texto, historial: historialChat })
+      body: JSON.stringify({ slug: agenteActual, tarea: texto, historial: historialChat,
+                             modelo: modeloElegido })
     }).then(x => x.json());
     ocultarEscribiendo();
     if (r.ok) {
       historialChat.push({ rol: "usuario", texto });
       historialChat.push({ rol: "agente", texto: r.texto });
-      agregarBurbuja("agente", md(r.texto));
+      agregarBurbuja("agente", md(r.texto), r.modelo);
     } else {
       $("modal-error").textContent = "Error: " + (r.error || "desconocido");
     }
@@ -416,6 +453,7 @@ async function orquestarGG() {
   const texto = input.value.trim();
   if (!texto || controlador) return;
   input.value = "";
+  const modeloElegido = $("chat-modelo").value;
   agregarBurbuja("usuario", esc(texto));
   mostrarEscribiendo();
   controlador = new AbortController();
@@ -425,14 +463,14 @@ async function orquestarGG() {
   try {
     const r = await fetch("/api/orquestar", { method: "POST", signal: controlador.signal,
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ tarea: texto }) }).then(x => x.json());
+      body: JSON.stringify({ tarea: texto, modelo: modeloElegido }) }).then(x => x.json());
     ocultarEscribiendo();
     if (r.ok) {
       historialChat.push({ rol: "usuario", texto });
       if (r.delegaciones && r.delegaciones.length) {
         const trazaHtml = "<b>Delegaciones del Gerente General</b>" + r.delegaciones.map(d => `
           <div class="delegacion ${d.ok ? "ok" : "fallo"}">
-            <div class="quien">${d.ok ? "✓" : "✕"} ${esc(d.agente)}</div>
+            <div class="quien">${d.ok ? "✓" : "✕"} ${esc(d.agente)}${d.modelo ? ` <span style="color:var(--suave);font-weight:400">· ${esc(nombreCorto(d.modelo))}</span>` : ""}</div>
             <div class="tarea-del">${esc(d.tarea || "")}</div>
             <div>${md((d.ok ? (d.texto || "") : ("Error: " + (d.error || ""))).slice(0, 600))}</div>
           </div>`).join("");
@@ -440,7 +478,8 @@ async function orquestarGG() {
       }
       const final = (r.delega ? "" : "(sin delegación — respuesta directa)\n\n") + r.texto;
       historialChat.push({ rol: "agente", texto: final });
-      agregarBurbuja("agente", md(final));
+      agregarBurbuja("agente", md(final),
+        modeloElegido || null);
     } else {
       $("modal-error").textContent = "Error: " + (r.error || "desconocido");
     }
@@ -484,11 +523,11 @@ async function cargarConfig() {
   const c = await api("/api/config");
   for (const k of ["MODELO_EMPRESA_BASE", "MODELO_EMPRESA_RAZONAMIENTO", "MODELO_EMPRESA_LIGERO", "LITELLM_BASE_URL"])
     $("cfg-" + k).value = c[k] || "";
-  $("cfg-LLM_API_KEY").value = "";
-  $("cfg-LLM_API_KEY").placeholder = c.LLM_API_KEY.configurada
-    ? `••••${c.LLM_API_KEY.ultimos4} (configurada — dejá vacío para conservar)`
+  $("cfg-LITELLM_MASTER_KEY").value = "";
+  $("cfg-LITELLM_MASTER_KEY").placeholder = c.LITELLM_MASTER_KEY.configurada
+    ? `••••${c.LITELLM_MASTER_KEY.ultimos4} (configurada — dejá vacío para conservar)`
     : "Pegá tu API key acá";
-  $("ayuda-key").textContent = c.LLM_API_KEY.configurada
+  $("ayuda-key").textContent = c.LITELLM_MASTER_KEY.configurada
     ? "Key configurada. Solo completala si querés cambiarla."
     : "Todavía no hay key configurada: sin esto los agentes no pueden correr.";
 }
@@ -497,7 +536,7 @@ async function guardarConfig() {
   const btn = $("btn-guardar");
   btn.disabled = true;
   const cuerpo = {};
-  for (const k of ["LLM_API_KEY", "MODELO_EMPRESA_BASE", "MODELO_EMPRESA_RAZONAMIENTO", "MODELO_EMPRESA_LIGERO", "LITELLM_BASE_URL"])
+  for (const k of ["LITELLM_MASTER_KEY", "MODELO_EMPRESA_BASE", "MODELO_EMPRESA_RAZONAMIENTO", "MODELO_EMPRESA_LIGERO", "LITELLM_BASE_URL"])
     cuerpo[k] = $("cfg-" + k).value;
   try {
     const r = await api("/api/config", { method: "POST",

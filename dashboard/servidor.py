@@ -2,7 +2,7 @@
 """Dashboard web local de la empresa (Company OS).
 
 Panel visual para manejar y configurar todo sin tocar la terminal:
-  - Agentes: ver los 25, buscarlos, asignarles tareas, leer respuestas.
+  - Agentes: ver los 26, buscarlos, asignarles tareas, leer respuestas.
   - Auditoría: quién hizo qué, cuándo, cuántos tokens (filtrable, expandible).
   - Configuración: API key y modelos en formulario, con prueba de conexión
     en vivo contra el proveedor (detecta modelos muertos antes de ejecutar).
@@ -193,7 +193,7 @@ def estado_empresa() -> dict:
         "agentes": len(modulo_agente.slugs()),
         "etapas": etapas,
         "productos": productos,
-        "proxy_configurado": bool(os.environ.get("LLM_API_KEY")),
+        "proxy_configurado": bool(os.environ.get("LITELLM_MASTER_KEY")),
     }
 
 
@@ -307,6 +307,14 @@ class Manejador(BaseHTTPRequestHandler):
             self._json(config_publica())
         elif ruta.path == "/api/empresa":
             self._json(estado_empresa())
+        elif ruta.path == "/api/modelos":
+            # Modelos por nivel ya resueltos (para el selector del chat).
+            aplicar_env()
+            self._json({
+                "base": modulo_agente._resolver_modelo("empresa-base"),
+                "razonamiento": modulo_agente._resolver_modelo("empresa-razonamiento"),
+                "ligero": modulo_agente._resolver_modelo("empresa-ligero"),
+            })
         else:
             self._json({"ok": False, "error": "no encontrado"}, 404)
 
@@ -362,7 +370,8 @@ class Manejador(BaseHTTPRequestHandler):
                         "`pip install -r runtime/requirements.txt`."
                     )
                 c = modulo_cliente.crear_cliente()
-                r = modulo_delegacion.orquestar(tarea, c)
+                modelo = cuerpo.get("modelo", "")
+                r = modulo_delegacion.orquestar(tarea, c, forzar_modelo=modelo)
                 self._json({"ok": True, **r})
             except Exception as e:  # noqa: BLE001 - se reporta al dashboard
                 self._json({"ok": False, "error": str(e)})

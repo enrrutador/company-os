@@ -44,15 +44,19 @@ def quitar_bloques(texto: str) -> str:
     return _BLOQUE.sub("", texto or "").strip()
 
 
-def orquestar(tarea: str, cliente) -> dict:
+def orquestar(tarea: str, cliente, forzar_modelo: str = "") -> dict:
     """El Gerente General planifica, delega a especialistas y consolida.
+
+    forzar_modelo: si se indica, TODAS las llamadas (GG + delegados) usan ese
+    modelo en vez del de cada agente.
 
     Devuelve {"texto", "plan", "delegaciones": [...], "delega": bool}.
     Cada delegación: {"agente", "tarea", "ok", "modelo"/"error", "texto"}.
     """
     from . import agente as modulo_agente
 
-    plan_r = modulo_agente.ejecutar_agente("gerente-general", tarea, cliente)
+    plan_r = modulo_agente.ejecutar_agente("gerente-general", tarea, cliente,
+                                          forzar_modelo=forzar_modelo)
     delegaciones = extraer_delegaciones(plan_r["texto"])
     plan_limpio = quitar_bloques(plan_r["texto"])
 
@@ -72,7 +76,8 @@ def orquestar(tarea: str, cliente) -> dict:
                           "error": f"agente desconocido: {slug}"})
             continue
         try:
-            r = modulo_agente.ejecutar_agente(slug, subtarea, cliente)
+            r = modulo_agente.ejecutar_agente(slug, subtarea, cliente,
+                                             forzar_modelo=forzar_modelo)
             resultados.append((slug, subtarea, r["texto"]))
             traza.append({"agente": slug, "tarea": subtarea, "ok": True,
                           "modelo": r["modelo"],
@@ -91,7 +96,8 @@ def orquestar(tarea: str, cliente) -> dict:
         "Ahora consolidá la respuesta final para el dueño: directa, accionable, "
         "en español rioplatense. No repitas el bloque DELEGAR."
     )
-    final_r = modulo_agente.ejecutar_agente("gerente-general", consolidacion, cliente)
+    final_r = modulo_agente.ejecutar_agente("gerente-general", consolidacion, cliente,
+                                           forzar_modelo=forzar_modelo)
     return {
         "texto": final_r["texto"],
         "plan": plan_limpio,
