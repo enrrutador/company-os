@@ -1,6 +1,6 @@
 ---
 name: autocapacitacion-transversal
-description: Capacidad transversal de los 25 agentes: detectar cuando una tarea excede tu conocimiento, estudiar con fuentes, demostrar lo aprendido con un artefacto y recién entonces ejecutar. Usala siempre que aparezca un gap de conocimiento.
+description: Capacidad transversal de los 26 agentes: detectar cuando una tarea excede tu conocimiento, estudiar con fuentes, demostrar lo aprendido con un artefacto y recién entonces ejecutar. Usala siempre que aparezca un gap de conocimiento.
 ---
 
 # Autocapacitación — capacidad transversal

@@ -21,22 +21,9 @@ Sos el que separa los hechos de las opiniones. Tu estándar: cada número es tra
 7. Redactar PII en reportes compartidos; tenancy por producto y por cliente.
 **Criterio de calidad:** Contenidos o Fabian pueden actuar sobre el reporte sin pedir aclaraciones.
 
-### 2. Sourcing continuo (etapa 0 del pipeline)
-**Cuándo:** permanente; la pila nunca depende de la inspiración del momento.
-**Pasos:**
-1. Escanear mercado, competencia y pedidos de clientes (`mcp:web-search`) buscando tesis: problemas pagos, segmentos desatendidos, cambios regulatorios o tecnológicos.
-2. Cada tesis entra a la pila con: descripción en 3 líneas, evidencia (fuentes), puntaje de priorización y fecha.
-3. Priorizar con **RICE** (estándar profesional para pilas con datos):
-   - **Reach:** cuentas/usuarios afectados por período (número real, no porcentaje).
-   - **Impact:** 3 = masivo, 2 = alto, 1 = medio, 0.5 = bajo, 0.25 = mínimo. Escala fija, siempre la misma.
-   - **Confidence:** 100% = validado con datos, 80% = estimación razonable con evidencia, 50% = intuición. Sin falsa precisión: si la evidencia es floja, la confianza es 50%.
-   - **Effort:** costo de validación en tiempo/personas, todas las funciones incluidas.
-   - **Puntaje = (Reach × Impact × Confidence) / Effort.** Para triage rápido sin datos de reach, usar **ICE** (Impact × Confidence × Ease, 1-10 cada uno).
-   - **Cuándo RICE miente:** penaliza las apuestas estratégicas inciertas (la confianza baja las hunde). Las apuestas grandes van por criterio de portfolio, no por puntaje.
-4. Para cada tesis top, **nombrar la contrapartida explícita**: ¿qué se posterga para hacer esto y qué riesgo crea la posterga? Lo que queda debajo del corte se documenta con por qué se difirió y **qué evidencia lo haría subir** (y cuándo se revisa).
-5. La pila se ordena por puntaje; el top alimenta la etapa de Validación cuando el pipeline lo pide.
-6. Es mantenimiento de la pila basado en evidencia, no investigación abierta: sin evidencia registrada, la tesis no sube de prioridad.
-**Criterio de calidad:** nº de tesis nuevas evaluadas por mes; 0 tesis en Validación sin evidencia.
+### 2. Sourcing continuo (etapa 0 del pipeline) — transferido al Explorador
+**Desde 2026-10-08** la etapa 0 (descubrimiento continuo de ideas y pila de tesis priorizada) es responsabilidad del **[Explorador](../../agentes/direccion/explorador.md)** (Dirección), con su skill `explorador-descubrimiento-ideas`.
+El Analista **ya no hace sourcing**: su aporte a la etapa 0 es proveer datos medidos cuando el Explorador los pide (métricas de productos existentes, conversiones, quejas cuantificadas). Si una fuente sirve a ambos, se comparte, no se duplica.
 
 ### 3. Tablero del pipeline
 **Cuándo:** actualización diaria; alerta inmediata ante desvíos.

@@ -9,6 +9,7 @@ lo hace bien. Ambas se leen juntas.
 | Agente | Habilidad | Especialidad |
 |---|---|---|
 | Gerente General | [Gerente General](gerente-general/SKILL.md) | Coordinación y descomposición de objetivos |
+| Explorador | [Explorador](explorador/SKILL.md) | Descubrimiento continuo de ideas y pila de tesis |
 | Arquitecto | [Arquitecto](arquitecto/SKILL.md) | Diseño de arquitectura y ADRs |
 | Constructor | [Constructor](constructor/SKILL.md) | Implementación full-stack desde specs |
 | Desarrollador Mobile | [Desarrollador Mobile](desarrollador-mobile/SKILL.md) | Apps iOS/Android multiplataforma |
@@ -36,7 +37,7 @@ lo hace bien. Ambas se leen juntas.
 
 ## Capacidades transversales
 
-Habilidades que tienen **los 25 agentes**, inyectadas automáticamente en cada ejecución
+Habilidades que tienen **los 26 agentes**, inyectadas automáticamente en cada ejecución
 (ver `runtime/nucleo/agente.py`):
 
 | Capacidad | Habilidad | Qué garantiza |
