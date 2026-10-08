@@ -44,6 +44,69 @@ def quitar_bloques(texto: str) -> str:
     return _BLOQUE.sub("", texto or "").strip()
 
 
+def orquestar_eventos(tarea: str, cliente, forzar_modelo: str = ""):
+    """Versión en streaming de orquestar(): genera eventos para SSE.
+
+    Eventos (dicts serializables):
+    - plan: {"tipo", "texto", "delega"}
+    - delegacion_inicio: {"tipo", "agente", "tarea", "indice", "total"}
+    - delegacion_fin: {"tipo", "agente", "tarea", "ok", "modelo"/"error",
+      "texto", "indice", "total"}
+    - consolidando: {"tipo"}
+    - final: {"tipo", "texto", "delega", "delegaciones"}
+    """
+    from . import agente as modulo_agente
+
+    plan_r = modulo_agente.ejecutar_agente("gerente-general", tarea, cliente,
+                                          forzar_modelo=forzar_modelo)
+    delegaciones = extraer_delegaciones(plan_r["texto"])
+    plan_limpio = quitar_bloques(plan_r["texto"])
+    yield {"tipo": "plan", "texto": plan_limpio, "delega": bool(delegaciones)}
+
+    if not delegaciones:
+        yield {"tipo": "final", "texto": plan_r["texto"], "delega": False,
+               "delegaciones": []}
+        return
+
+    resultados = []
+    traza = []
+    total = len(delegaciones)
+    for i, (slug, subtarea) in enumerate(delegaciones):
+        yield {"tipo": "delegacion_inicio", "agente": slug, "tarea": subtarea,
+               "indice": i + 1, "total": total}
+        if slug not in modulo_agente.REGISTRO:
+            item = {"agente": slug, "tarea": subtarea, "ok": False,
+                    "error": f"agente desconocido: {slug}"}
+        else:
+            try:
+                r = modulo_agente.ejecutar_agente(slug, subtarea, cliente,
+                                                 forzar_modelo=forzar_modelo)
+                resultados.append((slug, subtarea, r["texto"]))
+                item = {"agente": slug, "tarea": subtarea, "ok": True,
+                        "modelo": r["modelo"], "texto": r["texto"][:2000]}
+            except Exception as e:  # noqa: BLE001 - se reporta en la traza
+                item = {"agente": slug, "tarea": subtarea, "ok": False,
+                        "error": str(e)[:300]}
+        traza.append(item)
+        yield {"tipo": "delegacion_fin", "indice": i + 1, "total": total, **item}
+
+    yield {"tipo": "consolidando"}
+    contexto = "\n\n".join(
+        f"--- {slug} ---\nTarea delegada: {t}\nResultado:\n{txt[:MAX_CHARS_RESULTADO]}"
+        for slug, t, txt in resultados
+    )
+    consolidacion = (
+        f"Tarea original del dueño: {tarea}\n\n"
+        f"Delegaste este trabajo y estos fueron los resultados:\n{contexto}\n\n"
+        "Ahora consolidá la respuesta final para el dueño: directa, accionable, "
+        "en español rioplatense. No repitas el bloque DELEGAR."
+    )
+    final_r = modulo_agente.ejecutar_agente("gerente-general", consolidacion, cliente,
+                                           forzar_modelo=forzar_modelo)
+    yield {"tipo": "final", "texto": final_r["texto"], "delega": True,
+           "delegaciones": traza}
+
+
 def orquestar(tarea: str, cliente, forzar_modelo: str = "") -> dict:
     """El Gerente General planifica, delega a especialistas y consolida.
 

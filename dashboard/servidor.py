@@ -436,6 +436,41 @@ class Manejador(BaseHTTPRequestHandler):
                 self._json({"ok": True, **r})
             except Exception as e:  # noqa: BLE001 - se reporta al dashboard
                 self._json({"ok": False, "error": str(e)})
+        elif ruta.path == "/api/orquestar_stream":
+            # Orquestación en vivo vía SSE: el dashboard muestra cada
+            # delegación a medida que ocurre.
+            cuerpo = self._cuerpo()
+            tarea = cuerpo.get("tarea", "")
+            if not tarea:
+                self._json({"ok": False, "error": "falta tarea"}, 400)
+                return
+            try:
+                aplicar_env()
+                from nucleo import cliente as modulo_cliente
+                from nucleo import delegacion as modulo_delegacion
+                c = modulo_cliente.crear_cliente()
+                modelo = cuerpo.get("modelo", "")
+                self.send_response(200)
+                self.send_header("Content-Type", "text/event-stream")
+                self.send_header("Cache-Control", "no-cache")
+                self.send_header("X-Accel-Buffering", "no")
+                self.end_headers()
+                for evento in modulo_delegacion.orquestar_eventos(
+                        tarea, c, forzar_modelo=modelo):
+                    linea = ("data: " + json.dumps(evento, ensure_ascii=False)
+                             + "\n\n")
+                    self.wfile.write(linea.encode("utf-8"))
+                    self.wfile.flush()
+            except (BrokenPipeError, ConnectionResetError):
+                pass
+            except Exception as e:  # noqa: BLE001 - se reporta por SSE
+                try:
+                    linea = ("data: " + json.dumps(
+                        {"tipo": "error", "error": str(e)}) + "\n\n")
+                    self.wfile.write(linea.encode("utf-8"))
+                    self.wfile.flush()
+                except (BrokenPipeError, ConnectionResetError):
+                    pass
         elif ruta.path == "/api/probar":
             try:
                 r = probar_modelos()
