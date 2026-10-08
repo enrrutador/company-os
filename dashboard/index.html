@@ -513,6 +513,10 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); box-sha
   background: var(--surface2); border: 1px solid var(--border); color: var(--text2);
 }
 .drawer-head .icon-btn:active { transform: scale(.92); }
+.drawer-back { display: none; }
+@media (max-width: 900px) {
+  .drawer-back { display: flex; }
+}
 
 /* ---------- Orquestación en vivo ---------- */
 .orq {
@@ -761,6 +765,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); box-sha
 <div class="drawer-fondo" id="drawer-fondo">
   <div class="drawer" role="dialog" aria-modal="true">
     <div class="drawer-head">
+      <button class="icon-btn drawer-back" id="chat-volver" aria-label="Volver al panel">←</button>
       <div class="avatar" id="chat-avatar">?</div>
       <div class="drawer-titles">
         <b id="chat-nombre"></b>
@@ -1112,6 +1117,7 @@ function cerrarChat() {
   $("drawer-fondo").classList.remove("abierto");
 }
 $("chat-cerrar").addEventListener("click", cerrarChat);
+$("chat-volver").addEventListener("click", cerrarChat);
 $("drawer-fondo").addEventListener("click", e => { if (e.target.id === "drawer-fondo") cerrarChat(); });
 $("chat-input").addEventListener("keydown", e => {
   if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
