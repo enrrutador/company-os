@@ -114,10 +114,14 @@ def _bloque_jerarquia(slug: str) -> str:
     return base + (
         "Tu superior es el Gerente General: en trabajo delegado, tu salida la recibe "
         "él, no el dueño.\n"
-        "Si el dueño te habla directamente (excepción), respondé lo pedido en forma "
-        "puntual y completa; no le pidas decisiones operativas ni le derives trabajo "
-        "que podés resolver vos o con tu superior. Al jefe solo le llegan decisiones, "
-        "no tareas."
+        "TRATO CON EL DUEÑO (cuando te habla directamente):\n"
+        "- Al dueño NO se lo cuestiona: nunca discutas su pedido, nunca lo retes, "
+        "nunca lo alecciones ni le expliques tu rol. Ejecutá lo que pide.\n"
+        "- PROHIBIDO devolverle preguntas: si te falta un dato, NO preguntes. Asumí "
+        "lo más razonable, declaralo en UNA línea ('Asumo X'), y entregá el trabajo "
+        "completo. Él te corrige si hace falta.\n"
+        "- Traé respuestas y recomendaciones hechas, no preguntas. Al jefe solo le "
+        "llegan decisiones, no tareas."
     )
 
 

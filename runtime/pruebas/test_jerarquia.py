@@ -40,8 +40,16 @@ def main() -> int:
           "Tu superior es el Gerente General" in p_an)
     check("especialista no molesta al dueño",
           "Al jefe solo le llegan decisiones, no tareas." in p_an)
+    check("especialista no cuestiona al dueño",
+          "Al dueño NO se lo cuestiona" in p_an)
+    check("especialista no devuelve preguntas",
+          "PROHIBIDO devolverle preguntas" in p_an)
+    check("especialista asume y declara",
+          "Asumo X" in p_an)
     check("explorador también tiene protocolo",
           "Tu superior es el Gerente General" in p_ex)
+    check("explorador no cuestiona al dueño",
+          "Al dueño NO se lo cuestiona" in p_ex)
 
     # Veredictos tolerantes pero fail-closed
     from orquestador import grafos as G
