@@ -44,7 +44,8 @@ def quitar_bloques(texto: str) -> str:
     return _BLOQUE.sub("", texto or "").strip()
 
 
-def orquestar_eventos(tarea: str, cliente, forzar_modelo: str = ""):
+def orquestar_eventos(tarea: str, cliente, forzar_modelo: str = "",
+                      historial: list = None):
     """Versión en streaming de orquestar(): genera eventos para SSE.
 
     Eventos (dicts serializables):
@@ -58,7 +59,8 @@ def orquestar_eventos(tarea: str, cliente, forzar_modelo: str = ""):
     from . import agente as modulo_agente
 
     plan_r = modulo_agente.ejecutar_agente("gerente-general", tarea, cliente,
-                                          forzar_modelo=forzar_modelo)
+                                          forzar_modelo=forzar_modelo,
+                                          historial=historial)
     delegaciones = extraer_delegaciones(plan_r["texto"])
     plan_limpio = quitar_bloques(plan_r["texto"])
     yield {"tipo": "plan", "texto": plan_limpio, "delega": bool(delegaciones)}

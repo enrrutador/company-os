@@ -270,7 +270,7 @@ _TRABAJOS = {}
 _TRABAJOS_LOCK = threading.Lock()
 
 
-def _nuevo_trabajo(tarea: str, modelo: str) -> str:
+def _nuevo_trabajo(tarea: str, modelo: str, historial: list = None) -> str:
     """Crea un trabajo de orquestación que corre en segundo plano."""
     job_id = uuid.uuid4().hex[:12]
     with _TRABAJOS_LOCK:
@@ -278,7 +278,8 @@ def _nuevo_trabajo(tarea: str, modelo: str) -> str:
         for k in viejos[:max(0, len(viejos) - 20)]:
             del _TRABAJOS[k]
         _TRABAJOS[job_id] = {"eventos": [], "terminado": False,
-                             "cancelado": False, "tarea": tarea[:120]}
+                             "cancelado": False, "tarea": tarea[:120],
+                             "historial": historial or []}
     h = threading.Thread(target=_correr_trabajo, args=(job_id, tarea, modelo),
                          daemon=True)
     h.start()
@@ -294,7 +295,8 @@ def _correr_trabajo(job_id: str, tarea: str, modelo: str) -> None:
         aplicar_env()
         c = modulo_cliente.crear_cliente()
         for ev in modulo_delegacion.orquestar_eventos(tarea, c,
-                                                     forzar_modelo=modelo):
+                                                     forzar_modelo=modelo,
+                                                     historial=job.get("historial")):
             with _TRABAJOS_LOCK:
                 if job["cancelado"]:
                     job["eventos"].append({
@@ -545,7 +547,9 @@ class Manejador(BaseHTTPRequestHandler):
             if not tarea:
                 self._json({"ok": False, "error": "falta tarea"}, 400)
                 return
-            job_id = _nuevo_trabajo(tarea, cuerpo.get("modelo", ""))
+            job_id = _nuevo_trabajo(tarea, cuerpo.get("modelo", ""),
+                                    historial=cuerpo.get("historial") if isinstance(
+                                        cuerpo.get("historial"), list) else None)
             self._json({"ok": True, "id": job_id})
         elif ruta.path == "/api/trabajos/cancelar":
             cuerpo = self._cuerpo()

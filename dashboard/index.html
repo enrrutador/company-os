@@ -1220,6 +1220,9 @@ async function enviarMensaje() {
   const input = $("chat-input");
   const texto = input.value.trim();
   if (!texto || controlador) return;
+  // El Gerente General siempre orquesta: su respuesta puede delegar a
+  // especialistas, y eso debe ejecutarse y mostrarse, no quedar en texto.
+  if (agenteActual === "gerente-general") { orquestarGG(); return; }
   input.value = "";
   input.style.height = "auto";
   const modeloElegido = $("chat-modelo").value;
@@ -1318,6 +1321,11 @@ function procesarEventoOrq(ev) {
     c.className = "orq-conclusion";
     c.innerHTML = md(ev.texto || "");
     t.appendChild(c);
+    if (ev.texto && !ev.cancelado) {
+      const estGG = estadoChat("gerente-general");
+      estGG.historial.push({ rol: "agente", texto: ev.texto });
+      guardarChats();
+    }
   } else if (ev.tipo === "error") {
     pulsoEl.classList.add("fin");
     headEl.textContent = "Error en la orquestación";
@@ -1391,6 +1399,7 @@ async function orquestarGG() {
   input.style.height = "auto";
   const modeloElegido = $("chat-modelo").value;
   agregarBurbuja("usuario", esc(texto));
+  const historialPrevio = historialChat.slice(-20);
   historialChat.push({ rol: "usuario", texto });
   guardarChats();
   $("chat-error").textContent = "";
@@ -1399,7 +1408,8 @@ async function orquestarGG() {
   try {
     const r = await api("/api/trabajos", { method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tarea: texto, modelo: modeloElegido }) });
+      body: JSON.stringify({ tarea: texto, modelo: modeloElegido,
+                             historial: historialPrevio }) });
     if (!r.ok) throw new Error(r.error || "no se pudo crear el trabajo");
     est.trabajoId = r.id;
     est.terminado = false;
