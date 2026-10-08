@@ -35,7 +35,7 @@ class Guion:
         if slug == "gerente-general":
             # 1=tesis, 2=tesis_final, 3=veredicto_validacion, 4=plan_comercial
             if k == 1:
-                return "Tesis: comparador de precios de hipermercados argentinos."
+                return "Tesis: producto de prueba."
             if k == 2:
                 return ("Tesis final. VEREDICTO: MATAR"
                         if self.matar else "Tesis final. VEREDICTO: SEGUIR")
@@ -81,7 +81,7 @@ def correr(matar_en_tesis: bool) -> dict:
 
     grafos.modulo_agente.ejecutar_agente = _wrap
     try:
-        return grafos.ejecutar_etapa("producto", "Comparador de precios de hipermercados",
+        return grafos.ejecutar_etapa("producto", "Producto de prueba",
                                      componentes=["constructor"])
     finally:
         grafos.modulo_agente.ejecutar_agente = _orig

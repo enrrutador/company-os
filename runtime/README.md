@@ -91,7 +91,7 @@ python3 pruebas/test_orquestador_mock.py   # grafo completo contra mock
 Un objetivo en lenguaje natural, y el Gerente General orquesta las etapas:
 
 ```bash
-python3 ejecutar_pipeline.py producto --objetivo "Creá una web que compare precios de hipermercados"
+python3 ejecutar_pipeline.py producto --objetivo "Tu objetivo en lenguaje natural"
 ```
 
 Flujo: **tesis** (etapa 1: el GG escribe la tesis, el equipo rojo la ataca,
