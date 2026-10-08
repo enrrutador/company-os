@@ -32,6 +32,7 @@ from urllib.parse import urlparse, parse_qs
 RAIZ_REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DIR_DASHBOARD = os.path.dirname(os.path.abspath(__file__))
 RUTA_ENV = os.path.join(RAIZ_REPO, "infraestructura", "litellm", ".env")
+RUTA_CHATS = os.path.join(RAIZ_REPO, "runtime", "registro", "chats.json")
 
 sys.path.insert(0, os.path.join(RAIZ_REPO, "runtime"))
 from nucleo import agente as modulo_agente  # noqa: E402
@@ -189,6 +190,38 @@ def info_agentes() -> list:
                       "resumen": resumen,
                       "ultima_actividad": ult.get(slug, "")})
     return datos
+
+
+def leer_chats() -> dict:
+    """Historiales de chat por agente, persistidos en el servidor.
+
+    El localStorage del navegador es por origen (cada túnel nuevo es un origen
+    distinto y lo vacía); el servidor es la fuente de verdad que sobrevive a
+    cambios de URL del túnel.
+    """
+    try:
+        with open(RUTA_CHATS, encoding="utf-8") as f:
+            datos = json.load(f)
+            return datos if isinstance(datos, dict) else {}
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+
+def guardar_chats(chats: dict) -> None:
+    os.makedirs(os.path.dirname(RUTA_CHATS), exist_ok=True)
+    # Higiene: guardar solo historial (los trabajos en curso no sobreviven al
+    # reinicio del servidor; el frontend los re-sondea o los marca).
+    limpio = {}
+    for slug, estado in (chats or {}).items():
+        if not isinstance(estado, dict):
+            continue
+        hist = estado.get("historial") or []
+        limpio[slug] = {"historial": [
+            {"rol": t.get("rol"), "texto": str(t.get("texto", ""))[:8000]}
+            for t in hist[-50:] if isinstance(t, dict) and t.get("texto")
+        ]}
+    with open(RUTA_CHATS, "w", encoding="utf-8") as f:
+        json.dump(limpio, f, ensure_ascii=False)
 
 
 def leer_auditoria(limite: int = 50, agente: str = "") -> dict:
@@ -442,6 +475,8 @@ class Manejador(BaseHTTPRequestHandler):
                 eventos = job["eventos"][desde:]
                 terminado = job["terminado"]
             self._json({"ok": True, "eventos": eventos, "terminado": terminado})
+        elif ruta.path == "/api/chats":
+            self._json({"ok": True, "chats": leer_chats()})
         else:
             self._json({"ok": False, "error": "no encontrado"}, 404)
 
@@ -519,6 +554,19 @@ class Manejador(BaseHTTPRequestHandler):
                 if job and not job["terminado"]:
                     job["cancelado"] = True
             self._json({"ok": True})
+        elif ruta.path == "/api/chats":
+            # Persiste historiales de chat en el servidor (sobreviven a cambios
+            # de URL del túnel; el localStorage es por origen y se vacía).
+            cuerpo = self._cuerpo()
+            chats = cuerpo.get("chats")
+            if not isinstance(chats, dict):
+                self._json({"ok": False, "error": "chats inválido"}, 400)
+                return
+            try:
+                guardar_chats(chats)
+                self._json({"ok": True})
+            except Exception as e:  # noqa: BLE001 - se reporta al dashboard
+                self._json({"ok": False, "error": str(e)})
         elif ruta.path == "/api/probar":
             try:
                 r = probar_modelos()

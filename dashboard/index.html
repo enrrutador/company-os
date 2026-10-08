@@ -819,6 +819,25 @@ catch (e) { chats = {}; }
 function guardarChats() {
   try { localStorage.setItem("companyos_chats", JSON.stringify(chats)); }
   catch (e) { /* almacenamiento lleno o bloqueado: seguir sin persistir */ }
+  // El localStorage es por origen (cada túnel nuevo lo vacía): el servidor
+  // es la fuente de verdad que sobrevive a cambios de URL.
+  try {
+    fetch("/api/chats", { method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chats }) }).catch(() => {});
+  } catch (e) { /* sin servidor: queda el localStorage */ }
+}
+async function cargarChatsServidor() {
+  try {
+    const r = await fetch("/api/chats").then(x => x.json());
+    if (r.ok && r.chats) {
+      for (const [slug, estado] of Object.entries(r.chats)) {
+        if (estado && Array.isArray(estado.historial) && estado.historial.length)
+          chats[slug] = { historial: estado.historial, trabajoId: null, terminado: true, vistos: 0 };
+      }
+      try { localStorage.setItem("companyos_chats", JSON.stringify(chats)); } catch (e) {}
+    }
+  } catch (e) { /* sin servidor: se usa el localStorage */ }
 }
 function estadoChat(slug) {
   if (!chats[slug]) chats[slug] = { historial: [], trabajoId: null, terminado: true, vistos: 0 };
@@ -1581,7 +1600,7 @@ async function probarModelos() {
 }
 
 /* ---------- Init ---------- */
-cargarAgentes().then(() => { renderCmdk(""); });
+cargarChatsServidor().finally(() => { cargarAgentes().then(() => { renderCmdk(""); }); });
 cargarOperacion();
 </script>
 </body>
