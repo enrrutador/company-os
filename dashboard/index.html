@@ -809,6 +809,8 @@ const SUBTITULOS = { operacion: "Estado en vivo de la empresa", agentes: "26 esp
 
 let agenteActual = null;
 let historialChat = [];
+// Slugs de especialistas con delegación en curso (del trabajo activo del GG)
+const delegadosActivos = new Set();
 let controlador = null;
 
 /* Chats persistentes: el chat no se pierde al cerrar el drawer.
@@ -1124,6 +1126,7 @@ function abrirChat(slug) {
   if (est.trabajoId && !est.terminado) {
     // El trabajo siguió corriendo: reconstruir la línea de tiempo y reenganchar
     est.vistos = 0;
+    delegadosActivos.clear();
     crearTarjetaOrq();
     iniciarPoll();
   }
@@ -1284,6 +1287,7 @@ function procesarEventoOrq(ev) {
   const caja = $("chat-mensajes");
   if (ev.tipo === "delegacion_inicio") {
     const a = agentePorSlug(ev.agente);
+    if (ev.agente) { delegadosActivos.add(ev.agente); actualizarInsignias(); }
     const d = document.createElement("div");
     d.className = "orq-linea";
     d.dataset.indice = ev.indice;
@@ -1296,6 +1300,7 @@ function procesarEventoOrq(ev) {
     lineasEl.appendChild(d);
     contEl.textContent = `${ev.indice}/${ev.total}`;
   } else if (ev.tipo === "delegacion_fin") {
+    if (ev.agente) { delegadosActivos.delete(ev.agente); actualizarInsignias(); }
     const d = lineasEl.querySelector(`[data-indice="${ev.indice}"]`);
     if (d) {
       const est = d.querySelector(".orq-estado");
@@ -1326,9 +1331,13 @@ function procesarEventoOrq(ev) {
       estGG.historial.push({ rol: "agente", texto: ev.texto });
       guardarChats();
     }
+    delegadosActivos.clear();
+    actualizarInsignias();
   } else if (ev.tipo === "error") {
     pulsoEl.classList.add("fin");
     headEl.textContent = "Error en la orquestación";
+    delegadosActivos.clear();
+    actualizarInsignias();
     $("chat-error").textContent = "Error: " + (ev.error || "desconocido");
   }
   caja.scrollTop = caja.scrollHeight;
@@ -1377,7 +1386,8 @@ function actualizarBotonDetener() {
 function actualizarInsignias() {
   document.querySelectorAll(".agent-card").forEach(card => {
     const est = chats[card.dataset.slug];
-    const activo = !!(est && est.trabajoId && !est.terminado);
+    const activo = !!(est && est.trabajoId && !est.terminado) ||
+                   delegadosActivos.has(card.dataset.slug);
     let badge = card.querySelector(".trabajando-badge");
     if (activo && !badge) {
       badge = document.createElement("span");
