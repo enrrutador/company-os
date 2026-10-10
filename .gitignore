@@ -25,3 +25,6 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+
+# Estado local del dashboard (historiales de chat de tu máquina)
+runtime/registro/chats.json

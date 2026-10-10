@@ -575,6 +575,36 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); box-sha
 }
 .trabajando-badge span { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: pulso 1.2s infinite; }
 
+/* ---------- Pipeline ---------- */
+.pipe-select { width: 100%; }
+.chk { display: flex; align-items: flex-start; gap: 9px; margin: 12px 0 4px; font-size: var(--fs-sm); color: var(--text2); cursor: pointer; }
+.chk input { margin-top: 3px; accent-color: var(--accent); width: 15px; height: 15px; flex-shrink: 0; }
+.chk-toggle { display: flex; align-items: center; gap: 7px; font-size: var(--fs-xs); color: var(--text2); cursor: pointer; white-space: nowrap; }
+.chk-toggle input { accent-color: var(--accent); }
+.veredictos { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.veredicto { font-size: var(--fs-xs); font-weight: 700; padding: 4px 12px; border-radius: 20px; }
+.veredicto.seguir, .veredicto.validado, .veredicto.aprobado { background: var(--ok-soft); color: var(--ok); }
+.veredicto.matar, .veredicto.descartado, .veredicto.rechazado { background: var(--err-soft); color: var(--err); }
+.veredicto.otro { background: var(--info-soft); color: var(--info); }
+.traza-lista { margin: 10px 0; padding-left: 0; list-style: none; font-size: var(--fs-sm); color: var(--text2); }
+.traza-lista li { padding: 5px 0 5px 22px; position: relative; border-bottom: 1px solid var(--border); }
+.traza-lista li:last-child { border-bottom: none; }
+.traza-lista li::before { content: "→"; position: absolute; left: 2px; color: var(--accent2); }
+.art { border: 1px solid var(--border); border-radius: var(--r-sm); margin: 8px 0; overflow: hidden; }
+.art summary { cursor: pointer; padding: 9px 12px; font-size: var(--fs-sm); font-weight: 600; background: var(--surface2); list-style: none; }
+.art summary::-webkit-details-marker { display: none; }
+.art summary::before { content: "▸ "; color: var(--accent2); }
+.art[open] summary::before { content: "▾ "; }
+.art pre { margin: 0; padding: 12px; font-size: 12.5px; font-family: var(--mono); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 320px; overflow-y: auto; background: #05070c; }
+
+/* ---------- Sesiones y panel doble ---------- */
+.sesion-fila { display: flex; gap: 8px; padding: 8px 16px; border-bottom: 1px solid var(--border); background: var(--surface); align-items: center; }
+.sesion-fila select { flex: 1; min-width: 0; padding: 7px 10px; font-size: var(--fs-sm); }
+.sesion-fila .icon-btn { width: 34px; height: 34px; font-size: 16px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--surface2); border: 1px solid var(--border); color: var(--text2); }
+.drawer-fondo.abierto.doble { display: flex; justify-content: flex-end; align-items: stretch; }
+.drawer-fondo.doble .drawer { position: static; transform: none; flex: 1 1 0; max-width: 560px; margin-left: 0; }
+.drawer-fondo.doble .drawer + .drawer { border-left: 1px solid var(--border2); }
+
 /* ---------- Responsive ---------- */
 @media (max-width: 900px) {
   .stepper { flex-direction: column; align-items: stretch; overflow: visible; padding-bottom: 8px; }
@@ -608,6 +638,9 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); box-sha
   .search input:focus { width: 150px; }
   .cards { grid-template-columns: 1fr; }
   .drawer { max-width: none; border-left: none; }
+  .drawer-fondo.abierto.doble { flex-direction: column; justify-content: flex-start; }
+  .drawer-fondo.doble .drawer { max-width: none; height: 50vh; flex: none; }
+  .drawer-fondo.doble .drawer + .drawer { border-left: none; border-top: 1px solid var(--border2); }
   .toasts { bottom: calc(96px + env(safe-area-inset-bottom)); }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -640,6 +673,10 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); box-sha
       <button class="nav-item" data-view="empresa">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
         Empresa
+      </button>
+      <button class="nav-item" data-view="pipeline">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2.2"/><circle cx="19" cy="6" r="2.2"/><circle cx="12" cy="18" r="2.2"/><path d="M7 7.5 10.5 16M17 7.5 13.5 16M7.2 6h9.6"/></svg>
+        Pipeline
       </button>
     </nav>
     <div class="nav-label">Sistema</div>
@@ -727,11 +764,38 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); box-sha
         <div id="productos"></div>
       </section>
 
+      <section class="view" id="view-pipeline">
+        <div class="cfg-grid">
+          <div class="card">
+            <h3>Ejecutar etapa</h3>
+            <label class="lbl" for="pipe-etapa">Etapa</label>
+            <select id="pipe-etapa" class="pipe-select"></select>
+            <label class="lbl" for="pipe-objetivo">Objetivo del producto</label>
+            <textarea id="pipe-objetivo" rows="3" placeholder="Describí el producto o la meta en una frase…"></textarea>
+            <label class="lbl" for="pipe-componentes">Builders <span class="muted">— solo etapa Construcción</span></label>
+            <input type="text" id="pipe-componentes" value="constructor" autocomplete="off" spellcheck="false">
+            <label class="chk"><input type="checkbox" id="pipe-aprobar"> <span>Aprobar despliegue <span class="muted">(in-the-loop: sin esto frena en PENDIENTE_APROBACION_FABIAN)</span></span></label>
+            <div class="row">
+              <button class="btn-primary" id="btn-pipeline">▶ Ejecutar</button>
+              <button class="btn-ghost danger" id="btn-pipeline-detener" style="display:none">Detener</button>
+            </div>
+            <div class="hint">Tarda varios minutos (tesis ≈5, construcción ≈9, producto ≈22 llamadas al modelo). Podés salir de la vista: el trabajo sigue en el servidor.</div>
+          </div>
+          <div class="card">
+            <h3>Resultado</h3>
+            <div id="pipe-salida"><div class="empty">Todavía no corriste nada en esta sesión.</div></div>
+          </div>
+        </div>
+      </section>
+
       <section class="view" id="view-config">
         <div class="cfg-grid">
           <div class="card">
             <h3>Proveedor</h3>
-            <label class="lbl" for="cfg-LITELLM_MASTER_KEY">API key</label>
+            <label class="lbl" for="cfg-LLM_API_KEY">API key del proveedor</label>
+            <input type="password" id="cfg-LLM_API_KEY" placeholder="••••" autocomplete="off">
+            <div class="hint" id="ayuda-llm-key"></div>
+            <label class="lbl" for="cfg-LITELLM_MASTER_KEY">Clave maestra local <span class="muted">— solo para el proxy de tu máquina</span></label>
             <input type="password" id="cfg-LITELLM_MASTER_KEY" placeholder="••••" autocomplete="off">
             <div class="hint" id="ayuda-key"></div>
             <label class="lbl" for="cfg-LITELLM_BASE_URL">URL base (OpenAI-compatible)</label>
@@ -771,12 +835,18 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); box-sha
         <b id="chat-nombre"></b>
         <span id="chat-sub"></span>
       </div>
+      <button class="icon-btn" id="btn-paralelo" title="Abrir otra conversación en paralelo" aria-label="Abrir en paralelo">⧉</button>
       <button class="icon-btn" id="chat-cerrar" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="sesion-fila">
+      <select id="chat-sesion" title="Conversación"></select>
+      <button class="icon-btn" id="btn-nueva-sesion" title="Nueva conversación" aria-label="Nueva conversación">＋</button>
     </div>
     <div class="chat-mensajes" id="chat-mensajes"></div>
     <div class="chat-modelo-fila">
       <label for="chat-modelo">Modelo</label>
       <select id="chat-modelo"><option value="">Por defecto del agente</option></select>
+      <label class="chk-toggle" id="gg-directo-fila" style="display:none" title="Sin delegar: 1 sola llamada, más rápido y barato"><input type="checkbox" id="gg-directo"> Directa</label>
     </div>
     <div class="chat-entrada">
       <textarea id="chat-input" rows="2" placeholder="Escribí un mensaje… (Enter envía)"></textarea>
@@ -799,19 +869,124 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); box-sha
   </div>
 </div>
 <div class="toasts" id="toasts"></div>
+<div class="cmdk-fondo" id="paralelo-fondo">
+  <div class="cmdk" role="dialog" aria-modal="true" aria-label="Abrir en paralelo">
+    <div class="cmdk-entrada">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="paralelo-input" placeholder="Buscar conversación… (agente, título)" autocomplete="off">
+    </div>
+    <div class="cmdk-lista" id="paralelo-lista"></div>
+  </div>
+</div>
 <script>
 "use strict";
 const $ = id => document.getElementById(id);
 const ORDEN_AREAS = ["Dirección", "Ingeniería & Producto", "Ventas", "Soporte",
   "Marketing & Contenidos", "Finanzas & Admin", "Operaciones & IT"];
-const TITULOS = { operacion: "Operación", agentes: "Agentes", actividad: "Actividad", empresa: "Empresa", config: "Configuración" };
-const SUBTITULOS = { operacion: "Estado en vivo de la empresa", agentes: "26 especialistas listos para trabajar", actividad: "Registro auditado de ejecuciones", empresa: "Pipeline, productos y portfolio", config: "Proveedor, modelos y conexión" };
+const TITULOS = { operacion: "Operación", agentes: "Agentes", actividad: "Actividad", empresa: "Empresa", pipeline: "Pipeline", config: "Configuración" };
+const SUBTITULOS = { operacion: "Estado en vivo de la empresa", agentes: "26 especialistas listos para trabajar", actividad: "Registro auditado de ejecuciones", empresa: "Pipeline, productos y portfolio", pipeline: "Tesis, validación, construcción y comercial", config: "Proveedor, modelos y conexión" };
 
-let agenteActual = null;
-let historialChat = [];
+let agenteActual = null; // (legado: usar panel.slug)
+let historialChat = []; // (legado: usar panel.conv.historial)
 // Slugs de especialistas con delegación en curso (del trabajo activo del GG)
 const delegadosActivos = new Set();
-let controlador = null;
+
+/* ---------- Sesiones: conversaciones con fecha, por agente ----------
+   chats[slug] = { conversaciones: [{id, titulo, creada, actualizada,
+   historial[], trabajoId?, terminado?, vistos?}], activa: id } */
+function ahoraISO() { return new Date().toISOString(); }
+function nid() { return "c" + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36); }
+function normalizarChats() {
+  // Migra formato v1 ({historial}) a v2 ({conversaciones, activa}).
+  for (const [slug, estado] of Object.entries(chats)) {
+    if (!estado || typeof estado !== "object") { delete chats[slug]; continue; }
+    if (Array.isArray(estado.conversaciones)) {
+      estado.conversaciones = estado.conversaciones.filter(c => c && typeof c === "object");
+      if (!estado.conversaciones.length) { delete chats[slug]; continue; }
+      if (!estado.conversaciones.some(c => c.id === estado.activa))
+        estado.activa = estado.conversaciones[estado.conversaciones.length - 1].id;
+      continue;
+    }
+    const hist = Array.isArray(estado.historial) ? estado.historial : [];
+    if (!hist.length && !estado.trabajoId) { delete chats[slug]; continue; }
+    const c = { id: nid(), titulo: "Anterior", creada: ahoraISO(), actualizada: ahoraISO(),
+      historial: hist, trabajoId: estado.trabajoId || null,
+      terminado: estado.terminado !== false, vistos: estado.vistos | 0 };
+    chats[slug] = { conversaciones: [c], activa: c.id };
+  }
+}
+function convsDe(slug) {
+  if (!chats[slug] || !Array.isArray(chats[slug].conversaciones))
+    chats[slug] = { conversaciones: [], activa: null };
+  return chats[slug];
+}
+function convActiva(slug) {
+  const e = convsDe(slug);
+  let c = e.conversaciones.find(c => c && c.id === e.activa);
+  if (!c) {
+    c = { id: nid(), titulo: "Nueva", creada: ahoraISO(), actualizada: ahoraISO(),
+      historial: [], trabajoId: null, terminado: true, vistos: 0 };
+    e.conversaciones.push(c);
+    e.activa = c.id;
+  }
+  return c;
+}
+function nuevaConversacion(slug, titulo) {
+  const e = convsDe(slug);
+  const c = { id: nid(), titulo: titulo || "Nueva", creada: ahoraISO(), actualizada: ahoraISO(),
+    historial: [], trabajoId: null, terminado: true, vistos: 0 };
+  e.conversaciones.push(c);
+  while (e.conversaciones.length > 10) e.conversaciones.shift();
+  e.activa = c.id;
+  return c;
+}
+function titularConv(conv, textoUsuario) {
+  if (conv.titulo && conv.titulo !== "Nueva" && conv.titulo !== "Anterior") return;
+  conv.titulo = textoUsuario.slice(0, 36) + (textoUsuario.length > 36 ? "…" : "");
+}
+function grupoFecha(iso) {
+  const t = new Date(iso).getTime();
+  if (isNaN(t)) return "Anteriores";
+  const dias = (Date.now() - t) / 86400000;
+  if (dias < 1) return "Hoy";
+  if (dias < 7) return "Esta semana";
+  if (dias < 14) return "Semana pasada";
+  return "Anteriores";
+}
+function trabajoActivoDe(slug) {
+  const e = chats[slug];
+  if (!e || !Array.isArray(e.conversaciones)) return null;
+  return e.conversaciones.find(c => c && c.trabajoId && !c.terminado) || null;
+}
+
+/* ---------- Paneles: el chat vive en un panel (A principal, B paralelo) ---------- */
+const PANEL_A = { suf: "", slug: null, conv: null, controlador: null, pollTimer: null, root: null };
+let PANEL_B = null;
+function nodo(p, base) { return document.getElementById(base + p.suf); }
+function crearPanelB() {
+  if (PANEL_B) return PANEL_B;
+  const fondo = $("drawer-fondo");
+  const clon = fondo.querySelector(".drawer").cloneNode(true);
+  clon.querySelectorAll("[id]").forEach(n => { n.id = n.id + "-b"; });
+  clon.querySelectorAll("label[for]").forEach(n => { n.setAttribute("for", n.getAttribute("for") + "-b"); });
+  const caja = clon.querySelector(".chat-mensajes");
+  if (caja) caja.innerHTML = "";
+  const inp = clon.querySelector("textarea");
+  if (inp) { inp.value = ""; inp.style.height = "auto"; }
+  fondo.appendChild(clon);
+  fondo.classList.add("doble");
+  PANEL_B = { suf: "-b", slug: null, conv: null, controlador: null, pollTimer: null, root: clon };
+  cablearPanel(PANEL_B);
+  return PANEL_B;
+}
+function destruirPanelB() {
+  if (!PANEL_B) return;
+  detenerPoll(PANEL_B);
+  cancelarEjecucion(PANEL_B);
+  PANEL_B.root.remove();
+  PANEL_B = null;
+  $("drawer-fondo").classList.remove("doble");
+}
 
 /* Chats persistentes: el chat no se pierde al cerrar el drawer.
    El trabajo de orquestación corre en el servidor y sigue aunque salgas. */
@@ -834,18 +1009,23 @@ async function cargarChatsServidor() {
     const r = await fetch("/api/chats").then(x => x.json());
     if (r.ok && r.chats) {
       for (const [slug, estado] of Object.entries(r.chats)) {
-        if (estado && Array.isArray(estado.historial) && estado.historial.length)
-          chats[slug] = { historial: estado.historial, trabajoId: null, terminado: true, vistos: 0 };
+        if (!estado || typeof estado !== "object") continue;
+        if (Array.isArray(estado.conversaciones)) {
+          chats[slug] = { conversaciones: estado.conversaciones, activa: estado.activa };
+        } else if (Array.isArray(estado.historial) && estado.historial.length) {
+          chats[slug] = estado; // formato v1: lo migra normalizarChats()
+        }
       }
+      normalizarChats();
       try { localStorage.setItem("companyos_chats", JSON.stringify(chats)); } catch (e) {}
     }
   } catch (e) { /* sin servidor: se usa el localStorage */ }
+  normalizarChats();
 }
 function estadoChat(slug) {
-  if (!chats[slug]) chats[slug] = { historial: [], trabajoId: null, terminado: true, vistos: 0 };
-  return chats[slug];
+  // Compat: devuelve la conversación activa del agente.
+  return convActiva(slug);
 }
-let pollTimer = null;
 
 function esc(s) {
   return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
@@ -862,7 +1042,7 @@ function hue(slug) {
 }
 function avatarStyleOk(slug) {
   const h = hue(slug);
-  return `background:linear-gradient(135deg,hsl(${h},55%,48%),hsl(${(h + 45) % 360},55%,36%)`;
+  return `background:linear-gradient(135deg,hsl(${h},55%,48%),hsl(${(h + 45) % 360},55%,36%))`;
 }
 function iniciales(nombre) {
   return String(nombre || "?").split(/\s+/).slice(0, 2).map(p => p[0]).join("").toUpperCase();
@@ -895,8 +1075,10 @@ function irVista(v) {
   $("view-title").textContent = TITULOS[v] || v;
   $("view-sub").textContent = SUBTITULOS[v] || "";
   if (v === "operacion") cargarOperacion();
+  else clearInterval(opTimer);
   if (v === "actividad") cargarAuditoria();
   if (v === "empresa") cargarEmpresa();
+  if (v === "pipeline") cargarPipeline();
   if (v === "config") cargarConfig();
   window.scrollTo(0, 0);
 }
@@ -924,9 +1106,13 @@ async function refrescarOperacion() {
   try {
     const [e, aud] = await Promise.all([api("/api/empresa"), api("/api/auditoria?limite=6")]);
     // Ahora mismo: trabajos activos desde el estado local de chats
-    const activos = Object.entries(chats)
-      .filter(([, c]) => c.trabajoId && !c.terminado)
-      .map(([slug]) => agentePorSlug(slug)).filter(Boolean);
+    const activos = [];
+    for (const [slug, e] of Object.entries(chats)) {
+      if (trabajoActivoDe(slug)) {
+        const a = agentePorSlug(slug);
+        if (a) activos.push(a);
+      }
+    }
     $("op-trabajos").innerHTML = activos.length
       ? activos.map(a => `
         <div class="job-row" data-slug="${esc(a.slug)}">
@@ -988,6 +1174,8 @@ function cerrarCmdk() { $("cmdk-fondo").classList.remove("abierto"); }
 function cmdkAcciones() {
   return [
     { grupo: "Acciones", nombre: "Orquestar Gerente General", sub: "Delegar trabajo a especialistas", ir: () => abrirChat("gerente-general") },
+    { grupo: "Acciones", nombre: "Abrir en paralelo", sub: "Dos conversaciones lado a lado", ir: () => abrirPickerParalelo() },
+    { grupo: "Acciones", nombre: "Ejecutar pipeline", sub: "Tesis, validación, construcción, comercial", ir: () => irVista("pipeline") },
     { grupo: "Acciones", nombre: "Ir a Operación", sub: "Estado en vivo", ir: () => irVista("operacion") },
     { grupo: "Acciones", nombre: "Ir a Actividad", sub: "Registro auditado", ir: () => irVista("actividad") },
     { grupo: "Acciones", nombre: "Ir a Empresa", sub: "Pipeline y portfolio", ir: () => irVista("empresa") },
@@ -1042,7 +1230,8 @@ document.addEventListener("keydown", e => {
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); abrirCmdk(); }
   else if (e.key === "Escape") {
     if ($("cmdk-fondo").classList.contains("abierto")) cerrarCmdk();
-    else if ($("drawer-fondo").classList.contains("abierto")) cerrarChat();
+    else if ($("paralelo-fondo").classList.contains("abierto")) cerrarPickerParalelo();
+    else if ($("drawer-fondo").classList.contains("abierto")) cerrarTodo();
   }
 });
 
@@ -1050,7 +1239,8 @@ document.addEventListener("keydown", e => {
 async function cargarAgentes() {
   $("areas").innerHTML = `<div class="cards">` +
     Array(6).fill(`<div class="sk sk-card"></div>`).join("") + `</div>`;
-  const agentes = await api("/api/agentes");
+  try {
+    const agentes = await api("/api/agentes");
   window._agentes = agentes;
   const sel = $("filtro-agente");
   const actual = sel.value;
@@ -1058,6 +1248,9 @@ async function cargarAgentes() {
     agentes.map(a => `<option value="${esc(a.slug)}">${esc(a.nombre)}</option>`).join("");
   if ([...sel.options].some(o => o.value === actual)) sel.value = actual;
   renderAgentes();
+  } catch (e) {
+    $("areas").innerHTML = `<div class="empty"><b>Sin conexión</b>No se pudo contactar al servidor local. Revisá que <span style="font-family:var(--mono)">dashboard/servidor.py</span> esté corriendo.</div>`;
+  }
 }
 function renderAgentes() {
   const q = ($("buscar-agente").value || "").toLowerCase();
@@ -1097,77 +1290,127 @@ function cardHtml(a) {
 $("buscar-agente").addEventListener("input", renderAgentes);
 
 /* ---------- Chat (drawer) ---------- */
-function abrirChat(slug) {
+function renderSesionSelect(p) {
+  const sel = nodo(p, "chat-sesion");
+  const e = convsDe(p.slug);
+  const grupos = {};
+  for (const c of e.conversaciones) {
+    if (!c || typeof c !== "object") continue;
+    const g = grupoFecha(c.actualizada || c.creada);
+    (grupos[g] = grupos[g] || []).push(c);
+  }
+  let html = "";
+  for (const g of ["Hoy", "Esta semana", "Semana pasada", "Anteriores"]) {
+    if (!grupos[g]) continue;
+    html += `<optgroup label="${g}">` + grupos[g].map(c =>
+      `<option value="${esc(c.id)}">${esc((c.titulo || "Sin título") + " · " + (hace(c.actualizada || c.creada) || ""))}</option>`).join("") + `</optgroup>`;
+  }
+  sel.innerHTML = html || `<option value="">Nueva</option>`;
+  if (p.conv) sel.value = p.conv.id;
+}
+function abrirChat(slug, convId, p) {
+  p = p || PANEL_A;
   const a = agentePorSlug(slug);
   if (!a) return;
-  detenerPoll();
-  agenteActual = slug;
-  historialChat = estadoChat(slug).historial;
-  const av = $("chat-avatar");
+  detenerPoll(p);
+  p.slug = slug;
+  const e = convsDe(slug);
+  p.conv = (convId && e.conversaciones.find(c => c && c.id === convId)) || convActiva(slug);
+  const av = nodo(p, "chat-avatar");
   av.style.cssText = avatarStyleOk(slug);
   av.textContent = iniciales(a.nombre);
-  $("chat-nombre").textContent = a.nombre;
+  nodo(p, "chat-nombre").textContent = a.nombre;
   const mod = a.modelo_efectivo && a.modelo_efectivo !== a.modelo
     ? `${a.modelo} → ${a.modelo_efectivo}` : a.modelo;
-  $("chat-sub").textContent = (a.area ? a.area + " · " : "") + mod;
-  $("chat-error").textContent = "";
-  const caja = $("chat-mensajes");
+  nodo(p, "chat-sub").textContent = (a.area ? a.area + " · " : "") + mod;
+  nodo(p, "chat-error").textContent = "";
+  renderSesionSelect(p);
+  const caja = nodo(p, "chat-mensajes");
   caja.innerHTML = "";
-  for (const h of historialChat) {
-    agregarBurbuja(h.rol === "usuario" ? "usuario" : "agente",
+  for (const h of p.conv.historial) {
+    agregarBurbuja(p, h.rol === "usuario" ? "usuario" : "agente",
                    h.rol === "usuario" ? esc(h.texto) : md(h.texto));
   }
-  $("chat-input").value = "";
-  $("chat-input").style.height = "auto";
-  $("btn-orquestar").style.display = slug === "gerente-general" ? "" : "none";
-  cargarModelos();
+  nodo(p, "chat-input").value = "";
+  nodo(p, "chat-input").style.height = "auto";
+  nodo(p, "btn-orquestar").style.display = slug === "gerente-general" ? "" : "none";
+  nodo(p, "gg-directo-fila").style.display = slug === "gerente-general" ? "" : "none";
+  cargarModelos(p);
   $("drawer-fondo").classList.add("abierto");
-  const est = estadoChat(slug);
-  if (est.trabajoId && !est.terminado) {
+  if (p.conv.trabajoId && !p.conv.terminado) {
     // El trabajo siguió corriendo: reconstruir la línea de tiempo y reenganchar
-    est.vistos = 0;
+    p.conv.vistos = 0;
     delegadosActivos.clear();
-    crearTarjetaOrq();
-    iniciarPoll();
+    crearTarjetaOrq(p);
+    iniciarPoll(p);
   }
-  actualizarBotonDetener();
-  setTimeout(() => $("chat-input").focus(), 250);
+  actualizarBotonDetener(p);
+  setTimeout(() => nodo(p, "chat-input").focus(), 250);
 }
 function cerrarChat() {
-  cancelarEjecucion(); // aborta un mensaje normal en curso; los trabajos siguen
-  detenerPoll();
+  // Compat: cierra todos los paneles.
+  cerrarTodo();
+}
+function cerrarPanel(p) {
+  cancelarEjecucion(p); // aborta un mensaje normal en curso; los trabajos siguen
+  detenerPoll(p);
+  if (p.suf === "-b") {
+    destruirPanelB();
+  } else {
+    destruirPanelB(); // cerrar el principal cierra todo
+    $("drawer-fondo").classList.remove("abierto");
+  }
+}
+function cerrarTodo() {
+  if (PANEL_B) { detenerPoll(PANEL_B); cancelarEjecucion(PANEL_B); }
+  detenerPoll(PANEL_A);
+  cancelarEjecucion(PANEL_A);
+  destruirPanelB();
   $("drawer-fondo").classList.remove("abierto");
 }
-$("chat-cerrar").addEventListener("click", cerrarChat);
-$("chat-volver").addEventListener("click", cerrarChat);
-$("drawer-fondo").addEventListener("click", e => { if (e.target.id === "drawer-fondo") cerrarChat(); });
-$("chat-input").addEventListener("keydown", e => {
-  if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
-    e.preventDefault();
-    enviarMensaje();
-  }
-});
-$("chat-input").addEventListener("input", e => {
-  e.target.style.height = "auto";
-  e.target.style.height = Math.min(e.target.scrollHeight, 130) + "px";
-});
-$("btn-enviar").addEventListener("click", enviarMensaje);
-$("btn-orquestar").addEventListener("click", orquestarGG);
-$("btn-cancelar").addEventListener("click", async () => {
-  cancelarEjecucion(); // aborta un mensaje normal en curso
-  const est = agenteActual ? estadoChat(agenteActual) : null;
-  if (est && est.trabajoId && !est.terminado) {
-    try {
-      await api("/api/trabajos/cancelar", { method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: est.trabajoId }) });
-    } catch (e) { /* igual se verá en el próximo sondeo */ }
-    sondear();
-  }
-});
+function cablearPanel(p) {
+  const E = (base, ev, fn) => { const n = nodo(p, base); if (n) n.addEventListener(ev, fn); };
+  E("chat-cerrar", "click", () => cerrarPanel(p));
+  E("chat-volver", "click", () => cerrarPanel(p));
+  E("chat-input", "keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
+      enviarMensaje(p);
+    }
+  });
+  E("chat-input", "input", e => {
+    e.target.style.height = "auto";
+    e.target.style.height = Math.min(e.target.scrollHeight, 130) + "px";
+  });
+  E("btn-enviar", "click", () => enviarMensaje(p));
+  E("btn-orquestar", "click", () => orquestarGG(p));
+  E("btn-paralelo", "click", () => abrirPickerParalelo());
+  E("btn-nueva-sesion", "click", () => {
+    if (!p.slug) return;
+    p.conv = nuevaConversacion(p.slug);
+    guardarChats();
+    abrirChat(p.slug, p.conv.id, p);
+  });
+  E("chat-sesion", "change", () => {
+    if (p.slug) abrirChat(p.slug, nodo(p, "chat-sesion").value, p);
+  });
+  E("btn-cancelar", "click", async () => {
+    cancelarEjecucion(p); // aborta un mensaje normal en curso
+    const est = p.conv;
+    if (est && est.trabajoId && !est.terminado) {
+      try {
+        await api("/api/trabajos/cancelar", { method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: est.trabajoId }) });
+      } catch (e) { /* igual se verá en el próximo sondeo */ }
+      sondear(p);
+    }
+  });
+}
+$("drawer-fondo").addEventListener("click", e => { if (e.target.id === "drawer-fondo") cerrarTodo(); });
 
-function agregarBurbuja(rol, contenidoHtml, modelo) {
-  const caja = $("chat-mensajes");
+function agregarBurbuja(p, rol, contenidoHtml, modelo) {
+  const caja = nodo(p, "chat-mensajes");
   const d = document.createElement("div");
   d.className = "burbuja " + (rol === "usuario" ? "burbuja-usuario" : "burbuja-agente");
   const pie = modelo ? `${horaCorta()} · ${esc(nombreCorto(modelo))}` : horaCorta();
@@ -1176,31 +1419,33 @@ function agregarBurbuja(rol, contenidoHtml, modelo) {
   caja.scrollTop = caja.scrollHeight;
   return d;
 }
-function estadoEjecutando(ejecutando) {
-  $("btn-enviar").disabled = ejecutando;
-  $("btn-enviar").textContent = ejecutando ? "…" : "↑";
-  $("btn-orquestar").disabled = ejecutando;
-  $("btn-cancelar").style.display = ejecutando ? "" : "none";
+function estadoEjecutando(p, ejecutando) {
+  nodo(p, "btn-enviar").disabled = ejecutando;
+  nodo(p, "btn-enviar").textContent = ejecutando ? "…" : "↑";
+  nodo(p, "btn-orquestar").disabled = ejecutando;
+  nodo(p, "btn-cancelar").style.display = ejecutando ? "" : "none";
 }
-function cancelarEjecucion() {
-  if (controlador) { controlador.abort(); controlador = null; }
-  estadoEjecutando(false);
+function cancelarEjecucion(p) {
+  p = p || PANEL_A;
+  if (p.controlador) { p.controlador.abort(); p.controlador = null; }
+  estadoEjecutando(p, false);
 }
-function mostrarEscribiendo() {
+function mostrarEscribiendo(p) {
+  const caja = nodo(p, "chat-mensajes");
   const d = document.createElement("div");
   d.className = "escribiendo";
-  d.id = "escribiendo";
   d.innerHTML = "<span></span><span></span><span></span>";
-  $("chat-mensajes").appendChild(d);
-  $("chat-mensajes").scrollTop = $("chat-mensajes").scrollHeight;
+  caja.appendChild(d);
+  caja.scrollTop = caja.scrollHeight;
 }
-function ocultarEscribiendo() {
-  const d = $("escribiendo");
+function ocultarEscribiendo(p) {
+  const d = p.root.querySelector(".escribiendo");
   if (d) d.remove();
 }
 
-async function cargarModelos() {
-  const sel = $("chat-modelo");
+async function cargarModelos(p) {
+  p = p || PANEL_A;
+  const sel = nodo(p, "chat-modelo");
   const elegido = sel.value;
   sel.innerHTML = '<option value="">Por defecto del agente</option>';
   try {
@@ -1219,42 +1464,47 @@ async function cargarModelos() {
   if ([...sel.options].some(o => o.value === elegido)) sel.value = elegido;
 }
 
-async function enviarMensaje() {
-  const input = $("chat-input");
+async function enviarMensaje(p) {
+  p = p || PANEL_A;
+  const input = nodo(p, "chat-input");
   const texto = input.value.trim();
-  if (!texto || controlador) return;
-  // El Gerente General siempre orquesta: su respuesta puede delegar a
-  // especialistas, y eso debe ejecutarse y mostrarse, no quedar en texto.
-  if (agenteActual === "gerente-general") { orquestarGG(); return; }
+  if (!texto || p.controlador) return;
+  // El Gerente General orquesta por defecto (su respuesta puede delegar a
+  // especialistas y eso debe ejecutarse, no quedar en texto). Con "Directa"
+  // se le pregunta sin delegar: 1 llamada, más rápido y barato.
+  if (p.slug === "gerente-general" && !nodo(p, "gg-directo").checked) { orquestarGG(p); return; }
   input.value = "";
   input.style.height = "auto";
-  const modeloElegido = $("chat-modelo").value;
-  agregarBurbuja("usuario", esc(texto));
-  mostrarEscribiendo();
-  controlador = new AbortController();
-  estadoEjecutando(true);
-  $("chat-error").textContent = "";
+  const modeloElegido = nodo(p, "chat-modelo").value;
+  agregarBurbuja(p, "usuario", esc(texto));
+  mostrarEscribiendo(p);
+  p.controlador = new AbortController();
+  estadoEjecutando(p, true);
+  nodo(p, "chat-error").textContent = "";
   try {
-    const r = await fetch("/api/ejecutar", { method: "POST", signal: controlador.signal,
+    const r = await fetch("/api/ejecutar", { method: "POST", signal: p.controlador.signal,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug: agenteActual, tarea: texto, historial: historialChat, modelo: modeloElegido })
+      body: JSON.stringify({ slug: p.slug, tarea: texto, historial: p.conv.historial, modelo: modeloElegido })
     }).then(x => x.json());
-    ocultarEscribiendo();
+    ocultarEscribiendo(p);
     if (r.ok) {
-      historialChat.push({ rol: "usuario", texto });
-      historialChat.push({ rol: "agente", texto: r.texto });
+      p.conv.historial.push({ rol: "usuario", texto });
+      p.conv.historial.push({ rol: "agente", texto: r.texto });
+      p.conv.actualizada = ahoraISO();
+      titularConv(p.conv, texto);
       guardarChats();
-      agregarBurbuja("agente", md(r.texto), r.modelo);
+      renderSesionSelect(p);
+      agregarBurbuja(p, "agente", md(r.texto), r.modelo);
     } else {
-      $("chat-error").textContent = "Error: " + (r.error || "desconocido");
+      nodo(p, "chat-error").textContent = "Error: " + (r.error || "desconocido");
     }
   } catch (e) {
-    ocultarEscribiendo();
-    $("chat-error").textContent = e.name === "AbortError" ? "Envío cancelado." : "Error de conexión con el dashboard.";
+    ocultarEscribiendo(p);
+    nodo(p, "chat-error").textContent = e.name === "AbortError" ? "Envío cancelado." : "Error de conexión con el dashboard.";
   }
-  controlador = null;
-  estadoEjecutando(false);
-  $("chat-input").focus();
+  p.controlador = null;
+  estadoEjecutando(p, false);
+  nodo(p, "chat-input").focus();
 }
 
 function agentePorSlug(slug) {
@@ -1262,13 +1512,12 @@ function agentePorSlug(slug) {
 }
 
 /* ---------- Orquestación por trabajos (sigue aunque cierres el chat) ---------- */
-function crearTarjetaOrq() {
-  let t = $("orq-tarjeta");
+function crearTarjetaOrq(p) {
+  const caja = nodo(p, "chat-mensajes");
+  let t = p.root.querySelector(".orq");
   if (t) t.remove();
-  const caja = $("chat-mensajes");
   t = document.createElement("div");
   t.className = "orq";
-  t.id = "orq-tarjeta";
   t.innerHTML =
     `<div class="orq-head"><span class="orq-pulso"></span>` +
     `<b>Gerente General orquestando</b>` +
@@ -1278,13 +1527,13 @@ function crearTarjetaOrq() {
   return t;
 }
 
-function procesarEventoOrq(ev) {
-  const t = $("orq-tarjeta") || crearTarjetaOrq();
+function procesarEventoOrq(ev, p) {
+  const t = p.root.querySelector(".orq") || crearTarjetaOrq(p);
   const lineasEl = t.querySelector(".orq-lineas");
   const contEl = t.querySelector(".orq-contador");
   const headEl = t.querySelector(".orq-head b");
   const pulsoEl = t.querySelector(".orq-pulso");
-  const caja = $("chat-mensajes");
+  const caja = nodo(p, "chat-mensajes");
   if (ev.tipo === "delegacion_inicio") {
     const a = agentePorSlug(ev.agente);
     if (ev.agente) { delegadosActivos.add(ev.agente); actualizarInsignias(); }
@@ -1327,8 +1576,8 @@ function procesarEventoOrq(ev) {
     c.innerHTML = md(ev.texto || "");
     t.appendChild(c);
     if (ev.texto && !ev.cancelado) {
-      const estGG = estadoChat("gerente-general");
-      estGG.historial.push({ rol: "agente", texto: ev.texto });
+      p.conv.historial.push({ rol: "agente", texto: ev.texto });
+      p.conv.actualizada = ahoraISO();
       guardarChats();
     }
     delegadosActivos.clear();
@@ -1338,55 +1587,61 @@ function procesarEventoOrq(ev) {
     headEl.textContent = "Error en la orquestación";
     delegadosActivos.clear();
     actualizarInsignias();
-    $("chat-error").textContent = "Error: " + (ev.error || "desconocido");
+    nodo(p, "chat-error").textContent = "Error: " + (ev.error || "desconocido");
   }
   caja.scrollTop = caja.scrollHeight;
 }
 
-function iniciarPoll() {
-  detenerPoll();
-  sondear();
-  pollTimer = setInterval(sondear, 2000);
+function iniciarPoll(p) {
+  detenerPoll(p);
+  sondear(p);
+  p.pollTimer = setInterval(() => sondear(p), 2000);
 }
-function detenerPoll() {
-  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+function detenerPoll(p) {
+  p = p || PANEL_A;
+  if (p.pollTimer) { clearInterval(p.pollTimer); p.pollTimer = null; }
 }
-async function sondear() {
-  const slug = agenteActual;
-  if (!slug) { detenerPoll(); return; }
-  const est = estadoChat(slug);
-  if (!est.trabajoId || est.terminado) {
-    detenerPoll();
-    actualizarBotonDetener();
+async function sondear(p) {
+  const est = p.conv;
+  if (!est || !est.trabajoId || est.terminado) {
+    detenerPoll(p);
+    actualizarBotonDetener(p);
     return;
   }
   try {
     const d = await api(`/api/trabajos?id=${encodeURIComponent(est.trabajoId)}&desde=${est.vistos}`);
-    if (!d.ok) return;
-    for (const ev of d.eventos) procesarEventoOrq(ev);
+    if (!d.ok) {
+      // El trabajo ya no existe en el servidor (podado o reinicio): cortar.
+      est.terminado = true;
+      guardarChats();
+      detenerPoll(p);
+      actualizarBotonDetener(p);
+      actualizarInsignias();
+      return;
+    }
+    for (const ev of d.eventos) procesarEventoOrq(ev, p);
     est.vistos += d.eventos.length;
     guardarChats();
     if (d.terminado) {
       est.terminado = true;
       guardarChats();
-      detenerPoll();
-      actualizarBotonDetener();
+      detenerPoll(p);
+      actualizarBotonDetener(p);
       actualizarInsignias();
     }
   } catch (e) { /* reintenta en el próximo ciclo */ }
 }
 
-function actualizarBotonDetener() {
-  const est = agenteActual ? estadoChat(agenteActual) : null;
+function actualizarBotonDetener(p) {
+  const est = p.conv;
   const activo = !!(est && est.trabajoId && !est.terminado);
-  $("btn-cancelar").style.display = activo ? "" : "none";
-  if (agenteActual === "gerente-general") $("btn-orquestar").disabled = activo;
+  nodo(p, "btn-cancelar").style.display = activo ? "" : "none";
+  if (p.slug === "gerente-general") nodo(p, "btn-orquestar").disabled = activo;
 }
 
 function actualizarInsignias() {
   document.querySelectorAll(".agent-card").forEach(card => {
-    const est = chats[card.dataset.slug];
-    const activo = !!(est && est.trabajoId && !est.terminado) ||
+    const activo = !!trabajoActivoDe(card.dataset.slug) ||
                    delegadosActivos.has(card.dataset.slug);
     let badge = card.querySelector(".trabajando-badge");
     if (activo && !badge) {
@@ -1400,21 +1655,26 @@ function actualizarInsignias() {
   });
 }
 
-async function orquestarGG() {
-  const input = $("chat-input");
+async function orquestarGG(p) {
+  p = p || PANEL_A;
+  const input = nodo(p, "chat-input");
   const texto = input.value.trim();
-  const est = estadoChat(agenteActual);
+  const est = p.conv;
+  if (!est) return;
   if (!texto || (est.trabajoId && !est.terminado)) return;
   input.value = "";
   input.style.height = "auto";
-  const modeloElegido = $("chat-modelo").value;
-  agregarBurbuja("usuario", esc(texto));
-  const historialPrevio = historialChat.slice(-20);
-  historialChat.push({ rol: "usuario", texto });
+  const modeloElegido = nodo(p, "chat-modelo").value;
+  agregarBurbuja(p, "usuario", esc(texto));
+  const historialPrevio = est.historial.slice(-20);
+  est.historial.push({ rol: "usuario", texto });
+  est.actualizada = ahoraISO();
+  titularConv(est, texto);
   guardarChats();
-  $("chat-error").textContent = "";
-  $("btn-orquestar").disabled = true;
-  $("btn-orquestar").textContent = "Iniciando…";
+  renderSesionSelect(p);
+  nodo(p, "chat-error").textContent = "";
+  nodo(p, "btn-orquestar").disabled = true;
+  nodo(p, "btn-orquestar").textContent = "Iniciando…";
   try {
     const r = await api("/api/trabajos", { method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -1425,17 +1685,17 @@ async function orquestarGG() {
     est.terminado = false;
     est.vistos = 0;
     guardarChats();
-    crearTarjetaOrq();
-    actualizarBotonDetener();
+    crearTarjetaOrq(p);
+    actualizarBotonDetener(p);
     actualizarInsignias();
-    iniciarPoll();
+    iniciarPoll(p);
   } catch (e) {
-    $("chat-error").textContent = "Error: " + (e.message || "desconocido");
+    nodo(p, "chat-error").textContent = "Error: " + (e.message || "desconocido");
   }
-  $("btn-orquestar").disabled = false;
-  $("btn-orquestar").textContent = "⚡ Orquestar";
-  actualizarBotonDetener();
-  $("chat-input").focus();
+  nodo(p, "btn-orquestar").disabled = false;
+  nodo(p, "btn-orquestar").textContent = "⚡ Orquestar";
+  actualizarBotonDetener(p);
+  nodo(p, "chat-input").focus();
 }
 
 /* ---------- Mini markdown seguro ---------- */
@@ -1490,7 +1750,14 @@ async function cargarAuditoria() {
   const agente = $("filtro-agente").value || "";
   $("lista-auditoria").innerHTML =
     Array(4).fill(`<div class="sk" style="height:96px;margin-bottom:12px"></div>`).join("");
-  const d = await api("/api/auditoria?limite=50" + (agente ? "&agente=" + encodeURIComponent(agente) : ""));
+  let d;
+  try {
+    d = await api("/api/auditoria?limite=50" + (agente ? "&agente=" + encodeURIComponent(agente) : ""));
+  } catch (e) {
+    $("lista-auditoria").innerHTML = `<div class="empty"><b>Sin conexión</b>No se pudo contactar al servidor local.</div>`;
+    $("totales-auditoria").textContent = "";
+    return;
+  }
   $("totales-auditoria").innerHTML =
     `<b>${d.filtrados}</b> de <b>${d.total}</b> ejecuciones · <b>${d.tokens.toLocaleString("es-AR")}</b> tokens` +
     (agente ? ` · filtrado: ${esc(agente)}` : "");
@@ -1538,7 +1805,15 @@ function diaDe(iso) {
 
 /* ---------- Empresa ---------- */
 async function cargarEmpresa() {
-  const [e, aud] = await Promise.all([api("/api/empresa"), api("/api/auditoria?limite=1")]);
+  let e, aud;
+  try {
+    [e, aud] = await Promise.all([api("/api/empresa"), api("/api/auditoria?limite=1")]);
+  } catch (err) {
+    $("stats-empresa").innerHTML = `<div class="empty"><b>Sin conexión</b>No se pudo contactar al servidor local.</div>`;
+    $("stepper").innerHTML = "";
+    $("productos").innerHTML = "";
+    return;
+  }
   $("stats-empresa").innerHTML = `
     <div class="stat"><b>${e.agentes}</b><span>agentes en 7 áreas</span></div>
     <div class="stat"><b>${aud.total}</b><span>ejecuciones auditadas</span></div>
@@ -1559,26 +1834,144 @@ async function cargarEmpresa() {
   if (bs && e.build) bs.textContent = "Consola de Fabian · " + e.build;
 }
 
+/* ---------- Pipeline ---------- */
+let pipeTimer = null;
+let pipeJobId = null;
+async function cargarPipeline() {
+  const sel = $("pipe-etapa");
+  if (!sel.options.length) {
+    sel.innerHTML = `<option value="">Cargando etapas…</option>`;
+    try {
+      const r = await api("/api/pipeline");
+      if (r.ok) {
+        sel.innerHTML = r.etapas.map(e =>
+          `<option value="${esc(e.id)}">${esc(e.nombre)}</option>`).join("");
+      } else {
+        sel.innerHTML = `<option value="">${esc(r.error || "no disponible")}</option>`;
+      }
+    } catch (e) {
+      sel.innerHTML = `<option value="">Sin conexión con el servidor</option>`;
+    }
+  }
+}
+$("btn-pipeline").addEventListener("click", ejecutarPipeline);
+$("btn-pipeline-detener").addEventListener("click", async () => {
+  if (pipeJobId) {
+    try {
+      await api("/api/trabajos/cancelar", { method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: pipeJobId }) });
+    } catch (e) { /* igual se verá en el próximo sondeo */ }
+    sondearPipeline();
+  }
+});
+async function ejecutarPipeline() {
+  const etapa = $("pipe-etapa").value;
+  const objetivo = $("pipe-objetivo").value.trim();
+  if (!etapa || !objetivo || pipeJobId) return;
+  const box = $("pipe-salida");
+  box.innerHTML = `<div class="orq"><div class="orq-head"><span class="orq-pulso"></span><b>Etapa ${esc(etapa)} en curso…</b></div><div class="hint">Puede tardar varios minutos. Podés salir de la vista: el trabajo sigue.</div></div>`;
+  $("btn-pipeline").disabled = true;
+  $("btn-pipeline-detener").style.display = "";
+  try {
+    const r = await api("/api/pipeline", { method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ etapa, objetivo,
+        componentes: $("pipe-componentes").value,
+        aprobacion_despliegue: $("pipe-aprobar").checked }) });
+    if (!r.ok) throw new Error(r.error || "no se pudo crear el trabajo");
+    pipeJobId = r.id;
+    clearInterval(pipeTimer);
+    pipeTimer = setInterval(sondearPipeline, 2500);
+    sondearPipeline();
+  } catch (e) {
+    box.innerHTML = `<p class="err-msg">Error: ${esc(e.message || "desconocido")}</p>`;
+    $("btn-pipeline").disabled = false;
+    $("btn-pipeline-detener").style.display = "none";
+  }
+}
+async function sondearPipeline() {
+  if (!pipeJobId) { clearInterval(pipeTimer); return; }
+  let d;
+  try {
+    d = await api(`/api/trabajos?id=${encodeURIComponent(pipeJobId)}&desde=0`);
+  } catch (e) { return; /* reintenta en el próximo ciclo */ }
+  if (!d.ok) {
+    clearInterval(pipeTimer); pipeJobId = null;
+    $("btn-pipeline").disabled = false;
+    $("btn-pipeline-detener").style.display = "none";
+    return;
+  }
+  const evs = d.eventos || [];
+  const fin = evs.filter(e => e.tipo === "final").pop();
+  const err = evs.filter(e => e.tipo === "error").pop();
+  if (err) {
+    clearInterval(pipeTimer); pipeJobId = null;
+    $("pipe-salida").innerHTML = `<p class="err-msg">Error: ${esc(err.error || "desconocido")}</p>`;
+    $("btn-pipeline").disabled = false;
+    $("btn-pipeline-detener").style.display = "none";
+  } else if (fin) {
+    clearInterval(pipeTimer); pipeJobId = null;
+    $("pipe-salida").innerHTML = renderPipelineFinal(fin);
+    $("btn-pipeline").disabled = false;
+    $("btn-pipeline-detener").style.display = "none";
+    toast("Etapa del pipeline completada", "ok");
+  }
+}
+function claseVeredicto(v) {
+  v = String(v || "").toUpperCase();
+  if (["SEGUIR", "VALIDADO", "APROBADO"].includes(v)) return "seguir";
+  if (["MATAR", "DESCARTADO", "RECHAZADO"].includes(v)) return "matar";
+  return "otro";
+}
+function renderPipelineFinal(fin) {
+  if (fin.cancelado) return `<div class="empty"><b>Pipeline detenido</b>${esc(fin.texto || "")}</div>`;
+  const vers = Object.entries(fin.veredictos || {});
+  const traza = (fin.traza || []).map(p => `<li>${esc(p)}</li>`).join("");
+  const arts = Object.entries(fin.artefactos || {});
+  return `
+    ${vers.length ? `<div class="veredictos">${vers.map(([k, v]) =>
+      `<span class="veredicto ${claseVeredicto(v)}">${esc(k)}: ${esc(v)}</span>`).join("")}</div>` : ""}
+    <ul class="traza-lista">${traza}</ul>
+    ${arts.length ? arts.map(([n, txt]) => `
+      <details class="art"><summary>${esc(n)} <span class="muted">(${(txt || "").length} caracteres)</span></summary><pre>${esc(txt || "")}</pre></details>`).join("")
+      : `<div class="empty">Sin artefactos.</div>`}
+    ${fin.reintentos_qa ? `<p class="hint">Reintentos de QA: ${fin.reintentos_qa}</p>` : ""}`;
+}
+
 /* ---------- Configuración ---------- */
 $("btn-guardar").addEventListener("click", guardarConfig);
 $("btn-probar").addEventListener("click", probarModelos);
 async function cargarConfig() {
-  const c = await api("/api/config");
+  let c;
+  try {
+    c = await api("/api/config");
+  } catch (e) {
+    $("ayuda-key").textContent = "Sin conexión con el servidor local.";
+    return;
+  }
   for (const k of ["MODELO_EMPRESA_BASE", "MODELO_EMPRESA_RAZONAMIENTO", "MODELO_EMPRESA_LIGERO", "LITELLM_BASE_URL"])
     $("cfg-" + k).value = c[k] || "";
   $("cfg-LITELLM_MASTER_KEY").value = "";
   $("cfg-LITELLM_MASTER_KEY").placeholder = c.LITELLM_MASTER_KEY.configurada
     ? `••••${c.LITELLM_MASTER_KEY.ultimos4} (configurada — dejá vacío para conservar)`
-    : "Pegá tu API key acá";
+    : "Clave local del proxy (podés dejar el valor de ejemplo)";
   $("ayuda-key").textContent = c.LITELLM_MASTER_KEY.configurada
-    ? "Key configurada. Solo completala si querés cambiarla."
-    : "Todavía no hay key configurada: sin esto los agentes no pueden correr.";
+    ? "Clave maestra configurada. Solo completala si querés cambiarla."
+    : "Es la clave que los agentes usan contra tu proxy local, no la del proveedor.";
+  $("cfg-LLM_API_KEY").value = "";
+  $("cfg-LLM_API_KEY").placeholder = c.LLM_API_KEY.configurada
+    ? `••••${c.LLM_API_KEY.ultimos4} (configurada — dejá vacío para conservar)`
+    : "Pegá tu API key del proveedor acá";
+  $("ayuda-llm-key").textContent = c.LLM_API_KEY.configurada
+    ? "Key del proveedor configurada. Solo completala si querés cambiarla."
+    : "Sin esto los agentes no pueden correr: es la key que paga las llamadas al modelo.";
 }
 async function guardarConfig() {
   const btn = $("btn-guardar");
   btn.disabled = true;
   const cuerpo = {};
-  for (const k of ["LITELLM_MASTER_KEY", "MODELO_EMPRESA_BASE", "MODELO_EMPRESA_RAZONAMIENTO", "MODELO_EMPRESA_LIGERO", "LITELLM_BASE_URL"])
+  for (const k of ["LLM_API_KEY", "LITELLM_MASTER_KEY", "MODELO_EMPRESA_BASE", "MODELO_EMPRESA_RAZONAMIENTO", "MODELO_EMPRESA_LIGERO", "LITELLM_BASE_URL"])
     cuerpo[k] = $("cfg-" + k).value;
   const msg = $("config-msg");
   try {
@@ -1619,8 +2012,127 @@ async function probarModelos() {
   btn.disabled = false; btn.textContent = "Probar conexión";
 }
 
+/* ---------- Picker de paralelo: elegir conversación (hoy, semana pasada…) ---------- */
+let paraleloSel = 0;
+function abrirPickerParalelo() {
+  $("paralelo-fondo").classList.add("abierto");
+  $("paralelo-input").value = "";
+  renderParalelo("");
+  setTimeout(() => $("paralelo-input").focus(), 60);
+}
+function cerrarPickerParalelo() { $("paralelo-fondo").classList.remove("abierto"); }
+function itemsParalelo(q) {
+  q = (q || "").toLowerCase();
+  const items = [];
+  for (const [slug, e] of Object.entries(chats)) {
+    const a = agentePorSlug(slug);
+    if (!a || !e || !Array.isArray(e.conversaciones)) continue;
+    for (const c of e.conversaciones) {
+      if (!c || !c.historial || !c.historial.length) continue;
+      if (q && !(a.nombre.toLowerCase().includes(q) || (c.titulo || "").toLowerCase().includes(q) || slug.includes(q))) continue;
+      items.push({ slug, conv: c, agente: a });
+    }
+  }
+  items.sort((x, y) => String(y.conv.actualizada || "").localeCompare(String(x.conv.actualizada || "")));
+  return items.slice(0, 30);
+}
+function renderParalelo(q) {
+  const items = itemsParalelo(q);
+  paraleloSel = 0;
+  const lista = $("paralelo-lista");
+  const nueva = PANEL_A.slug
+    ? `<div class="cmdk-item sel" data-nueva="1">
+         <div class="tx"><b>＋ Nueva conversación con ${esc((agentePorSlug(PANEL_A.slug) || {}).nombre || PANEL_A.slug)}</b><span>Panel en paralelo, historial vacío</span></div>
+       </div>` : "";
+  if (!items.length && !PANEL_A.slug) {
+    lista.innerHTML = `<div class="cmdk-vacio">Todavía no hay conversaciones. Hablá con un agente primero.</div>`;
+    lista._items = [];
+    return;
+  }
+  let html = nueva, ultimoGrupo = "";
+  items.forEach((it, i) => {
+    const g = grupoFecha(it.conv.actualizada || it.conv.creada);
+    if (g !== ultimoGrupo) { html += `<div class="cmdk-grupo">${esc(g)}</div>`; ultimoGrupo = g; }
+    html += `<div class="cmdk-item${(!nueva && i === 0) ? " sel" : ""}" data-i="${i}">
+      <div class="avatar" style="${avatarStyleOk(it.slug)}">${esc(iniciales(it.agente.nombre))}</div>
+      <div class="tx"><b>${esc(it.agente.nombre)} — ${esc(it.conv.titulo || "Sin título")}</b><span>${esc(hace(it.conv.actualizada || it.conv.creada) || "")} · ${it.conv.historial.length} mensajes</span></div>
+    </div>`;
+  });
+  lista.innerHTML = html || `<div class="cmdk-vacio">Sin resultados para "${esc(q)}".</div>`;
+  lista._items = items;
+  lista._hayNueva = !!nueva;
+  lista.querySelectorAll(".cmdk-item").forEach(elm => {
+    elm.addEventListener("click", () => elegirParalelo(elm));
+    elm.addEventListener("mousemove", () => {
+      lista.querySelectorAll(".cmdk-item").forEach(x => x.classList.remove("sel"));
+      elm.classList.add("sel");
+    });
+  });
+}
+function elegirParalelo(elm) {
+  const lista = $("paralelo-lista");
+  const items = lista._items || [];
+  cerrarPickerParalelo();
+  if (elm.dataset.nueva) {
+    const slug = PANEL_A.slug;
+    if (!slug) return;
+    if (!PANEL_A.slug) { abrirChat(slug, nuevaConversacion(slug).id, PANEL_A); return; }
+    const p = crearPanelB();
+    $("drawer-fondo").classList.add("abierto");
+    abrirChat(slug, nuevaConversacion(slug).id, p);
+    return;
+  }
+  const it = items[+elm.dataset.i];
+  if (!it) return;
+  abrirEnParalelo(it.slug, it.conv.id);
+}
+function abrirEnParalelo(slug, convId) {
+  cerrarPickerParalelo();
+  if (!PANEL_A.slug) { abrirChat(slug, convId, PANEL_A); return; }
+  if (PANEL_B && PANEL_B.slug === slug && PANEL_B.conv && PANEL_B.conv.id === convId) return;
+  const p = crearPanelB();
+  $("drawer-fondo").classList.add("abierto");
+  abrirChat(slug, convId, p);
+}
+$("paralelo-fondo").addEventListener("click", e => { if (e.target.id === "paralelo-fondo") cerrarPickerParalelo(); });
+$("paralelo-input").addEventListener("input", e => renderParalelo(e.target.value));
+$("paralelo-input").addEventListener("keydown", e => {
+  const items = $("paralelo-lista").querySelectorAll(".cmdk-item");
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    e.preventDefault();
+    const n = items.length;
+    paraleloSel = (paraleloSel + (e.key === "ArrowDown" ? 1 : -1) + n) % Math.max(n, 1);
+    items.forEach((x, i) => x.classList.toggle("sel", i === paraleloSel));
+    items[paraleloSel]?.scrollIntoView({ block: "nearest" });
+  } else if (e.key === "Enter" && items[paraleloSel]) {
+    elegirParalelo(items[paraleloSel]);
+  }
+});
+
 /* ---------- Init ---------- */
-cargarChatsServidor().finally(() => { cargarAgentes().then(() => { renderCmdk(""); }); });
+async function verificarTrabajos() {
+  // Al cargar, los trabajos heredados pueden haber terminado o podarse:
+  // se valida cada uno para no sondear en falso.
+  for (const [slug, e] of Object.entries(chats)) {
+    if (!e || !Array.isArray(e.conversaciones)) continue;
+    for (const conv of e.conversaciones) {
+      if (!conv || !conv.trabajoId || conv.terminado) continue;
+      try {
+        const d = await api(`/api/trabajos?id=${encodeURIComponent(conv.trabajoId)}&desde=0`);
+        if (!d.ok || d.terminado) { conv.terminado = true; }
+      } catch (err) { /* sin servidor: se reintenta al abrir el chat */ }
+    }
+  }
+  guardarChats();
+}
+PANEL_A.root = document.querySelector("#drawer-fondo .drawer");
+cablearPanel(PANEL_A);
+try {
+  const guardados = JSON.parse(localStorage.getItem("companyos_chats") || "{}");
+  if (guardados && typeof guardados === "object") chats = guardados;
+} catch (e) { /* localStorage vacío o corrupto */ }
+normalizarChats();
+cargarChatsServidor().then(verificarTrabajos).finally(() => { cargarAgentes().then(() => { renderCmdk(""); }); });
 cargarOperacion();
 </script>
 </body>
