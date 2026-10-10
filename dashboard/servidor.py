@@ -207,19 +207,69 @@ def leer_chats() -> dict:
         return {}
 
 
+def _sanear_historial(hist) -> list:
+    return [
+        {"rol": t.get("rol"), "texto": str(t.get("texto", ""))[:8000]}
+        for t in (hist or [])[-50:] if isinstance(t, dict) and t.get("texto")
+    ]
+
+
+def _sanear_trabajo(fuente: dict) -> dict:
+    """Conserva el vínculo con un trabajo en curso (para reengancharlo)."""
+    item = {}
+    tid = fuente.get("trabajoId")
+    if isinstance(tid, str) and tid:
+        item["trabajoId"] = tid[:32]
+    if fuente.get("terminado") is False:
+        item["terminado"] = False
+    try:
+        item["vistos"] = max(0, int(fuente.get("vistos", 0) or 0))
+    except (TypeError, ValueError):
+        item["vistos"] = 0
+    return item
+
+
 def guardar_chats(chats: dict) -> None:
     os.makedirs(os.path.dirname(RUTA_CHATS), exist_ok=True)
     # Higiene: guardar solo historial (los trabajos en curso no sobreviven al
     # reinicio del servidor; el frontend los re-sondea o los marca).
+    # Formato v2: {slug: {conversaciones: [{id, titulo, creada, actualizada,
+    # historial, trabajoId?, terminado?, vistos?}], activa: id}}.
+    # Se acepta el formato v1 ({slug: {historial, ...}}) y se conserva.
     limpio = {}
     for slug, estado in (chats or {}).items():
         if not isinstance(estado, dict):
             continue
-        hist = estado.get("historial") or []
-        limpio[slug] = {"historial": [
-            {"rol": t.get("rol"), "texto": str(t.get("texto", ""))[:8000]}
-            for t in hist[-50:] if isinstance(t, dict) and t.get("texto")
-        ]}
+        if isinstance(estado.get("conversaciones"), list):
+            convs = []
+            for c in estado["conversaciones"][-10:]:
+                if not isinstance(c, dict):
+                    continue
+                item = {"historial": _sanear_historial(c.get("historial"))}
+                cid = c.get("id")
+                if isinstance(cid, str) and cid:
+                    item["id"] = cid[:32]
+                tit = c.get("titulo")
+                if isinstance(tit, str) and tit:
+                    item["titulo"] = tit[:120]
+                for k in ("creada", "actualizada"):
+                    v = c.get(k)
+                    if isinstance(v, str) and v:
+                        item[k] = v[:32]
+                item.update(_sanear_trabajo(c))
+                if item["historial"] or item.get("id"):
+                    convs.append(item)
+            if not convs:
+                continue
+            ids = {c.get("id") for c in convs if c.get("id")}
+            act = estado.get("activa")
+            limpio[slug] = {"conversaciones": convs,
+                            "activa": act if act in ids else convs[-1].get("id")}
+        else:
+            hist = estado.get("historial") or []
+            item = {"historial": _sanear_historial(hist)}
+            item.update(_sanear_trabajo(estado))
+            limpio[slug] = item
     with open(RUTA_CHATS, "w", encoding="utf-8") as f:
         json.dump(limpio, f, ensure_ascii=False)
 
@@ -308,6 +358,72 @@ def _correr_trabajo(job_id: str, tarea: str, modelo: str) -> None:
                 job["eventos"].append(ev)
             if ev.get("tipo") == "final":
                 break
+    except Exception as e:  # noqa: BLE001 - se reporta al dashboard
+        with _TRABAJOS_LOCK:
+            job["eventos"].append({"tipo": "error", "error": str(e)[:500]})
+    finally:
+        with _TRABAJOS_LOCK:
+            job["terminado"] = True
+
+
+def _nuevo_trabajo_pipeline(etapa: str, objetivo: str, componentes: list,
+                            aprobacion: bool) -> str:
+    """Crea un trabajo de pipeline (etapa LangGraph) en segundo plano."""
+    job_id = uuid.uuid4().hex[:12]
+    with _TRABAJOS_LOCK:
+        viejos = [k for k, v in _TRABAJOS.items() if v["terminado"]]
+        for k in viejos[:max(0, len(viejos) - 20)]:
+            del _TRABAJOS[k]
+        _TRABAJOS[job_id] = {"eventos": [], "terminado": False,
+                             "cancelado": False, "tarea": f"{etapa}: {objetivo[:100]}",
+                             "tipo": "pipeline"}
+    h = threading.Thread(target=_correr_pipeline,
+                         args=(job_id, etapa, objetivo, componentes, aprobacion),
+                         daemon=True)
+    h.start()
+    return job_id
+
+
+def _correr_pipeline(job_id: str, etapa: str, objetivo: str,
+                     componentes: list, aprobacion: bool) -> None:
+    """Ejecuta una etapa del pipeline en un hilo (puede tardar varios minutos)."""
+    job = _TRABAJOS[job_id]
+    try:
+        aplicar_env()
+        try:
+            from orquestador import grafos
+        except ImportError:
+            raise RuntimeError(
+                "Falta 'langgraph': instalá dependencias con "
+                "`pip install -r runtime/requirements.txt`."
+            )
+        if etapa not in grafos.ETAPAS:
+            raise ValueError(
+                f"Etapa desconocida: {etapa}. Disponibles: {', '.join(grafos.ETAPAS)}")
+        with _TRABAJOS_LOCK:
+            job["eventos"].append({"tipo": "inicio", "etapa": etapa})
+        # APROBACION_DESPLIEGUE rige solo para este trabajo (se restaura después).
+        anterior = os.environ.get("APROBACION_DESPLIEGUE")
+        if aprobacion:
+            os.environ["APROBACION_DESPLIEGUE"] = "si"
+        try:
+            final = grafos.ejecutar_etapa(etapa, objetivo, componentes=componentes)
+        finally:
+            if anterior is None:
+                os.environ.pop("APROBACION_DESPLIEGUE", None)
+            else:
+                os.environ["APROBACION_DESPLIEGUE"] = anterior
+        with _TRABAJOS_LOCK:
+            if job["cancelado"]:
+                job["eventos"].append({"tipo": "final", "etapa": etapa,
+                                       "cancelado": True,
+                                       "texto": "(Pipeline detenido por el dueño.)"})
+            else:
+                job["eventos"].append({"tipo": "final", "etapa": etapa,
+                                       "traza": final.get("traza", []),
+                                       "artefactos": final.get("artefactos", {}),
+                                       "veredictos": final.get("veredictos", {}),
+                                       "reintentos_qa": final.get("reintentos_qa", 0)})
     except Exception as e:  # noqa: BLE001 - se reporta al dashboard
         with _TRABAJOS_LOCK:
             job["eventos"].append({"tipo": "error", "error": str(e)[:500]})
@@ -462,6 +578,15 @@ class Manejador(BaseHTTPRequestHandler):
                 "razonamiento": modulo_agente._resolver_modelo("empresa-razonamiento"),
                 "ligero": modulo_agente._resolver_modelo("empresa-ligero"),
             })
+        elif ruta.path == "/api/pipeline":
+            # Etapas ejecutables del pipeline (requiere langgraph instalado).
+            try:
+                from orquestador import grafos as _grafos
+                etapas = [{"id": k, "nombre": v[0]} for k, v in _grafos.ETAPAS.items()]
+                self._json({"ok": True, "etapas": etapas})
+            except ImportError:
+                self._json({"ok": False,
+                            "error": "Falta 'langgraph': pip install -r runtime/requirements.txt."})
         elif ruta.path == "/api/trabajos":
             qs = parse_qs(ruta.query)
             job_id = qs.get("id", [""])[0]
@@ -558,6 +683,33 @@ class Manejador(BaseHTTPRequestHandler):
                 if job and not job["terminado"]:
                     job["cancelado"] = True
             self._json({"ok": True})
+        elif ruta.path == "/api/pipeline":
+            # Crea un trabajo de pipeline en segundo plano y devuelve su id.
+            # Se sondea igual que la orquestación: GET /api/trabajos?id=...
+            cuerpo = self._cuerpo()
+            etapa = (cuerpo.get("etapa") or "").strip()
+            objetivo = (cuerpo.get("objetivo") or "").strip()
+            if not etapa or not objetivo:
+                self._json({"ok": False, "error": "faltan etapa u objetivo"}, 400)
+                return
+            try:
+                from orquestador import grafos as _grafos
+                if etapa not in _grafos.ETAPAS:
+                    self._json({"ok": False,
+                                "error": f"etapa desconocida: {etapa}"}, 400)
+                    return
+            except ImportError:
+                self._json({"ok": False,
+                            "error": "Falta 'langgraph': pip install -r runtime/requirements.txt."},
+                           400)
+                return
+            comp = cuerpo.get("componentes") or ["constructor"]
+            if isinstance(comp, str):
+                comp = [c.strip() for c in comp.split(",") if c.strip()] or ["constructor"]
+            comp = [c for c in comp if c in modulo_agente.slugs()] or ["constructor"]
+            job_id = _nuevo_trabajo_pipeline(
+                etapa, objetivo, comp, bool(cuerpo.get("aprobacion_despliegue")))
+            self._json({"ok": True, "id": job_id})
         elif ruta.path == "/api/chats":
             # Persiste historiales de chat en el servidor (sobreviven a cambios
             # de URL del túnel; el localStorage es por origen y se vacía).
@@ -582,11 +734,18 @@ class Manejador(BaseHTTPRequestHandler):
             nuevos = {}
             for k in CLAVES_ENV:
                 if k in cuerpo and isinstance(cuerpo[k], str):
-                    v = cuerpo[k].strip()
+                    v = cuerpo[k].strip().split("\n")[0]
                     # clave secreta vacía = conservar la actual
                     if k in CLAVES_SECRETAS and not v:
                         continue
                     nuevos[k] = v
+            # El proxy (config.yaml) lee MODELO_BASE/_RAZONAMIENTO/_LIGERO y el
+            # runtime directo lee MODELO_EMPRESA_*: se escriben ambos para que
+            # los dos modos funcionen con lo configurado acá.
+            for suf in ("BASE", "RAZONAMIENTO", "LIGERO"):
+                v = nuevos.get(f"MODELO_EMPRESA_{suf}", "").strip()
+                if v:
+                    nuevos[f"MODELO_{suf}"] = v
             escribir_env(nuevos)
             self._json({"ok": True, "config": config_publica()})
         else:
